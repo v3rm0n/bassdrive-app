@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#121212"/>
+      <stop offset="100%" style="stop-color:#1E1E1E"/>
+    </linearGradient>
+    <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00BCD4"/>
+      <stop offset="100%" style="stop-color:#00E5FF"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bgGradient)"/>
+  
+  <!-- Radio Waves / Sound Waves -->
+  <g transform="translate(512, 512)">
+    <!-- Center dot -->
+    <circle cx="0" cy="0" r="40" fill="#00BCD4"/>
+    
+    <!-- Wave arcs - Left side -->
+    <path d="M -60 0 Q -100 -60, -160 0 Q -100 60, -60 0" 
+          fill="none" 
+          stroke="url(#waveGradient)" 
+          stroke-width="20"
+          stroke-linecap="round"/>
+    
+    <path d="M -100 0 Q -160 -100, -260 0 Q -160 100, -100 0" 
+          fill="none" 
+          stroke="url(#waveGradient)" 
+          stroke-width="18"
+          stroke-linecap="round"
+          opacity="0.8"/>
+    
+    <path d="M -140 0 Q -220 -140, -360 0 Q -220 140, -140 0" 
+          fill="none" 
+          stroke="url(#waveGradient)" 
+          stroke-width="16"
+          stroke-linecap="round"
+          opacity="0.6"/>
+    
+    <!-- Wave arcs - Right side -->
+    <path d="M 60 0 Q 100 -60, 160 0 Q 100 60, 60 0" 
+          fill="none" 
+          stroke="url(#waveGradient)" 
+          stroke-width="20"
+          stroke-linecap="round"/>
+    
+    <path d="M 100 0 Q 160 -100, 260 0 Q 160 100, 100 0" 
+          fill="none" 
+          stroke="url(#waveGradient)" 
+          stroke-width="18"
+          stroke-linecap="round"
+          opacity="0.8"/>
+    
+    <path d="M 140 0 Q 220 -140, 360 0 Q 220 140, 140 0" 
+          fill="none" 
+          stroke="url(#waveGradient)" 
+          stroke-width="16"
+          stroke-linecap="round"
+          opacity="0.6"/>
+  </g>
+  
+  <!-- Bassdrive B letter in center -->
+  <text x="512" y="720" 
+        font-family="Arial, sans-serif" 
+        font-size="120" 
+        font-weight="bold" 
+        fill="#00BCD4" 
+        text-anchor="middle">BASSDRIVE</text>
+</svg>
