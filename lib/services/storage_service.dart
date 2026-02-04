@@ -136,4 +136,12 @@ class StorageService {
     }
     await _prefs!.remove(_completedKey);
   }
+
+  /// Clears ALL app state from SharedPreferences - USE WITH CAUTION
+  Future<void> clearAllAppState() async {
+    if (_prefs == null) await initialize();
+
+    // Clear all SharedPreferences
+    await _prefs!.clear();
+  }
 }

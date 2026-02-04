@@ -251,6 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
       LiveStreamScreen(
         playerService: _playerService,
         liveStreamUrl: _apiResponse!.live,
+        storageService: _storageService,
       ),
       ArchiveScreen(
         archive: _apiResponse!.archive,

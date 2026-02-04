@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../services/audio_player_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/audio_controls.dart';
 
 class LiveStreamScreen extends StatelessWidget {
   final AudioPlayerService playerService;
   final String liveStreamUrl;
+  final StorageService storageService;
 
   const LiveStreamScreen({
     super.key,
     required this.playerService,
     required this.liveStreamUrl,
+    required this.storageService,
   });
 
   @override
@@ -27,28 +30,32 @@ class LiveStreamScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.secondary,
+              GestureDetector(
+                onLongPress: () => _showDeveloperMenu(context),
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.secondary,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                        blurRadius: 30,
+                        spreadRadius: 5,
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                    ),
-                  ],
+                  child:
+                      const Icon(Icons.radio, size: 100, color: Colors.white),
                 ),
-                child: const Icon(Icons.radio, size: 100, color: Colors.white),
               ),
               const SizedBox(height: 40),
               Text(
@@ -232,6 +239,108 @@ class LiveStreamScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeveloperMenu(BuildContext context) {
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Developer Menu',
+                style: theme.textTheme.displaySmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Secret settings for debugging',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Icon(
+                  Icons.delete_forever,
+                  color: theme.colorScheme.error,
+                ),
+                title: Text(
+                  'Clear All App State',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+                subtitle: const Text(
+                  'Removes all saved progress, completed episodes, and settings',
+                ),
+                onTap: () => _showClearConfirmation(context),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showClearConfirmation(BuildContext context) {
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: theme.colorScheme.surface,
+        title: const Text('Clear All App State?'),
+        content: const Text(
+          'This will permanently delete all listening progress, completed episodes, and app settings. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await storageService.clearAllAppState();
+              if (context.mounted) {
+                Navigator.pop(context);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All app state has been cleared'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Clear Everything'),
+          ),
+        ],
       ),
     );
   }
