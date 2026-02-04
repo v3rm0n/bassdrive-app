@@ -111,7 +111,7 @@ jobs:
       - name: Create ZIP archive
         run: |
           cd build/windows/x64/runner/Release
-          7z a -tzip ../../../../../../Bassdrive-Radio-Windows.zip *
+          7z a -tzip $GITHUB_WORKSPACE/Bassdrive-Radio-Windows.zip *
       
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
