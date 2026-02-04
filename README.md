@@ -3,10 +3,10 @@
 A cross-platform mobile application for listening to Bassdrive Internet radio. Built with Flutter for iOS and Android.
 
 <p float="left">
-  <img src="/screenshots/IMG_6740.PNG" width="24%" />
-  <img src="/screenshots/IMG_6741.PNG" width="24%" /> 
-  <img src="/screenshots/IMG_6742.PNG" width="24%" />
-  <img src="/screenshots/IMG_6743.PNG" width="24%" />
+  <img src="/screenshots/IMAGE1.PNG" width="24%" />
+  <img src="/screenshots/IMAGE2.PNG" width="24%" /> 
+  <img src="/screenshots/IMAGE3.PNG" width="24%" />
+  <img src="/screenshots/IMAGE4.PNG" width="24%" />
 </p>
 
 ## Features
