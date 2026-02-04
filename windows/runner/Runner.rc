@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.bassdrive" "\0"
-            VALUE "FileDescription", "bassdrive_radio" "\0"
+            VALUE "FileDescription", "Bassdrive Radio" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "bassdrive_radio" "\0"
+            VALUE "InternalName", "Bassdrive Radio" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.bassdrive. All rights reserved." "\0"
             VALUE "OriginalFilename", "bassdrive_radio.exe" "\0"
-            VALUE "ProductName", "bassdrive_radio" "\0"
+            VALUE "ProductName", "Bassdrive Radio" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
