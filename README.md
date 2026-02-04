@@ -2,6 +2,17 @@
 
 A cross-platform application for listening to Bassdrive Internet radio. Built with Flutter for iOS, Android, macOS, and Windows.
 
+[![Latest Release](https://img.shields.io/github/v/release/v3rm0n/bassdrive-app?label=latest%20release&style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/releases/latest)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/v3rm0n/bassdrive-app/release.yml?style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/actions)
+
+## Downloads
+
+Get the latest release for your platform:
+
+[![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/app-release.apk)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-macOS.dmg)
+[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Windows.zip)
+
 <p float="left">
   <img src="/screenshots/IMAGE1.PNG" width="24%" />
   <img src="/screenshots/IMAGE2.PNG" width="24%" /> 
