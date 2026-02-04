@@ -10,12 +10,14 @@ class ArchiveScreen extends StatefulWidget {
   final Map<String, ArchiveDay> archive;
   final AudioPlayerService playerService;
   final StorageService storageService;
+  final VoidCallback? onOpenPlayer;
 
   const ArchiveScreen({
     super.key,
     required this.archive,
     required this.playerService,
     required this.storageService,
+    this.onOpenPlayer,
   });
 
   @override
@@ -77,18 +79,15 @@ class _ArchiveScreenState extends State<ArchiveScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Archive'),
-        bottom:
-            _isSearching
-                ? null
-                : TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  tabs:
-                      days
-                          .map((day) => Tab(text: day.substring(0, 3)))
-                          .toList(),
-                ),
+        bottom: _isSearching
+            ? null
+            : TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs:
+                    days.map((day) => Tab(text: day.substring(0, 3))).toList(),
+              ),
       ),
       body: Column(
         children: [
@@ -99,19 +98,18 @@ class _ArchiveScreenState extends State<ArchiveScreen>
               decoration: InputDecoration(
                 hintText: 'Search shows...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon:
-                    _searchQuery.isNotEmpty
-                        ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                              _searchQuery = '';
-                              _isSearching = false;
-                            });
-                          },
-                        )
-                        : null,
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                            _isSearching = false;
+                          });
+                        },
+                      )
+                    : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -128,70 +126,65 @@ class _ArchiveScreenState extends State<ArchiveScreen>
             ),
           ),
           Expanded(
-            child:
-                _isSearching && filteredResults != null
-                    ? _buildSearchResults(filteredResults, theme)
-                    : TabBarView(
-                      controller: _tabController,
-                      children:
-                          days.map((day) {
-                            final archiveDay = widget.archive[day]!;
-                            final filteredShows = _filterShows(
-                              archiveDay.shows,
-                            );
+            child: _isSearching && filteredResults != null
+                ? _buildSearchResults(filteredResults, theme)
+                : TabBarView(
+                    controller: _tabController,
+                    children: days.map((day) {
+                      final archiveDay = widget.archive[day]!;
+                      final filteredShows = _filterShows(
+                        archiveDay.shows,
+                      );
 
-                            if (filteredShows.isEmpty) {
-                              return Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.search_off,
-                                      size: 64,
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.3),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'No shows found',
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.5),
-                                          ),
-                                    ),
-                                  ],
+                      if (filteredShows.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No shows found',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: filteredShows.length,
+                        itemBuilder: (context, index) {
+                          final show = filteredShows[index];
+                          return ShowListItem(
+                            show: show,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ShowDetailScreen(
+                                    show: show,
+                                    playerService: widget.playerService,
+                                    storageService: widget.storageService,
+                                    onOpenPlayer: widget.onOpenPlayer,
+                                  ),
                                 ),
                               );
-                            }
-
-                            return ListView.builder(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: filteredShows.length,
-                              itemBuilder: (context, index) {
-                                final show = filteredShows[index];
-                                return ShowListItem(
-                                  show: show,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => ShowDetailScreen(
-                                              show: show,
-                                              playerService:
-                                                  widget.playerService,
-                                              storageService:
-                                                  widget.storageService,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          }).toList(),
-                    ),
+                            },
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
           ),
         ],
       ),
@@ -245,12 +238,12 @@ class _ArchiveScreenState extends State<ArchiveScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) => ShowDetailScreen(
-                      show: show,
-                      playerService: widget.playerService,
-                      storageService: widget.storageService,
-                    ),
+                builder: (context) => ShowDetailScreen(
+                  show: show,
+                  playerService: widget.playerService,
+                  storageService: widget.storageService,
+                  onOpenPlayer: widget.onOpenPlayer,
+                ),
               ),
             );
           },

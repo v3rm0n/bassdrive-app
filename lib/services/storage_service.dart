@@ -28,11 +28,33 @@ class StorageService {
 
     final key = '$_progressKey.$episodeId';
     final jsonString = _prefs!.getString(key);
-    if (jsonString == null) return null;
+
+    // Check if episode is in completed list
+    final isCompleted = await isEpisodeCompleted(episodeId);
+
+    if (jsonString == null) {
+      // If no progress but is completed, return a completed progress
+      if (isCompleted) {
+        return ListeningProgress(
+          episodeId: episodeId,
+          episodeName: '',
+          showName: '',
+          position: Duration.zero,
+          lastPlayed: DateTime.now(),
+          isCompleted: true,
+        );
+      }
+      return null;
+    }
 
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      return ListeningProgress.fromJson(jsonMap);
+      final progress = ListeningProgress.fromJson(jsonMap);
+      // Ensure isCompleted is synced with the completed list
+      if (isCompleted && !progress.isCompleted) {
+        return progress.copyWith(isCompleted: true);
+      }
+      return progress;
     } catch (e) {
       return null;
     }
@@ -43,8 +65,8 @@ class StorageService {
 
     final allProgress = <String, ListeningProgress>{};
     final allKeys = _prefs!.getKeys().where(
-      (key) => key.startsWith('$_progressKey.'),
-    );
+          (key) => key.startsWith('$_progressKey.'),
+        );
 
     for (final key in allKeys) {
       final jsonString = _prefs!.getString(key);
@@ -64,9 +86,8 @@ class StorageService {
 
   Future<List<ListeningProgress>> getRecentProgress({int limit = 20}) async {
     final allProgress = await getAllProgress();
-    final sorted =
-        allProgress.values.toList()
-          ..sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
+    final sorted = allProgress.values.toList()
+      ..sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
     return sorted.take(limit).toList();
   }
 
@@ -77,6 +98,12 @@ class StorageService {
     if (!completed.contains(episodeId)) {
       completed.add(episodeId);
       await _prefs!.setStringList(_completedKey, completed);
+    }
+
+    // Also update the progress to mark it as completed
+    final existingProgress = await getProgress(episodeId);
+    if (existingProgress != null && !existingProgress.isCompleted) {
+      await saveProgress(existingProgress.copyWith(isCompleted: true));
     }
   }
 
@@ -102,8 +129,8 @@ class StorageService {
 
     // Remove all progress keys
     final allKeys = _prefs!.getKeys().where(
-      (key) => key.startsWith('$_progressKey.'),
-    );
+          (key) => key.startsWith('$_progressKey.'),
+        );
     for (final key in allKeys) {
       await _prefs!.remove(key);
     }

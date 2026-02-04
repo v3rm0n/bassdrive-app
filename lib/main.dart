@@ -256,6 +256,11 @@ class _HomeScreenState extends State<HomeScreen> {
         archive: _apiResponse!.archive,
         playerService: _playerService,
         storageService: _storageService,
+        onOpenPlayer: () {
+          setState(() {
+            _showFullPlayer = true;
+          });
+        },
       ),
     ];
 

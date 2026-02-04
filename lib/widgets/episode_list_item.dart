@@ -166,11 +166,25 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.episode.show,
-            style: theme.textTheme.bodySmall,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.episode.show,
+                  style: theme.textTheme.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (isCompleted) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.check_circle,
+                  size: 14,
+                  color: Colors.green,
+                ),
+              ],
+            ],
           ),
           if (hasProgress) ...[
             const SizedBox(height: 4),
@@ -196,14 +210,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                 ),
               ],
             ),
-          ] else if (isCompleted)
-            Text(
-              'Completed',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.green,
-                fontSize: 11,
-              ),
-            ),
+          ],
         ],
       ),
       trailing: isCurrentEpisode

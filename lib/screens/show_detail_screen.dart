@@ -10,12 +10,14 @@ class ShowDetailScreen extends StatefulWidget {
   final Show show;
   final AudioPlayerService playerService;
   final StorageService storageService;
+  final VoidCallback? onOpenPlayer;
 
   const ShowDetailScreen({
     super.key,
     required this.show,
     required this.playerService,
     required this.storageService,
+    this.onOpenPlayer,
   });
 
   @override
@@ -44,6 +46,19 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
   }
 
   Future<void> _playEpisode(Episode episode) async {
+    // Check if this episode is already the current episode
+    final isCurrentEpisode =
+        widget.playerService.currentEpisode?.id == episode.id;
+
+    if (isCurrentEpisode) {
+      // If already playing, pop back to home and open the full player
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+      widget.onOpenPlayer?.call();
+      return;
+    }
+
     final progress = await widget.storageService.getProgress(episode.id);
 
     await widget.playerService.playEpisode(
