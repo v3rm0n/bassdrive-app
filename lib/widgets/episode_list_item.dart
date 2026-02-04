@@ -28,11 +28,13 @@ class EpisodeListItem extends StatefulWidget {
 class _EpisodeListItemState extends State<EpisodeListItem> {
   ListeningProgress? _progress;
   bool _isLoading = true;
+  bool _isFavourite = false;
 
   @override
   void initState() {
     super.initState();
     _loadProgress();
+    _loadFavouriteStatus();
     // Listen to player changes to update progress display
     widget.playerService.addListener(_onPlayerChanged);
   }
@@ -59,6 +61,21 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _loadFavouriteStatus() async {
+    final isFavourite =
+        await widget.storageService.isFavourite(widget.episode.id);
+    if (mounted) {
+      setState(() {
+        _isFavourite = isFavourite;
+      });
+    }
+  }
+
+  Future<void> _toggleFavourite() async {
+    await widget.storageService.toggleFavourite(widget.episode.id);
+    await _loadFavouriteStatus();
   }
 
   @override
@@ -213,8 +230,21 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           ],
         ],
       ),
-      trailing: isCurrentEpisode
-          ? IconButton(
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(
+              _isFavourite ? Icons.favorite : Icons.favorite_border,
+            ),
+            iconSize: 24,
+            color: _isFavourite
+                ? Colors.red
+                : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            onPressed: _toggleFavourite,
+          ),
+          if (isCurrentEpisode)
+            IconButton(
               icon: Icon(
                 widget.playerService.isPlaying
                     ? Icons.pause_circle_filled
@@ -229,8 +259,9 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                   widget.playerService.play();
                 }
               },
-            )
-          : null,
+            ),
+        ],
+      ),
       onTap: widget.onTap,
     );
   }

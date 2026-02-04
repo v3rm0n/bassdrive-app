@@ -16,6 +16,7 @@ A cross-platform mobile application for listening to Bassdrive Internet radio. B
 - **Show Episodes**: Access hundreds of archived episodes
 - **Listening History**: Automatically tracks which episodes you've listened to
 - **Progress Tracking**: Saves your listening position and resumes where you left off
+- **Favourites/Bookmarks**: Save your favourite episodes for quick access
 - **Background Playback**: Continue listening while using other apps
 - **Modern UI**: Clean, dark-themed interface optimized for music apps
 - **No Authentication**: Open and free to use
@@ -28,6 +29,7 @@ The app features:
 - Show detail pages with episode lists
 - Mini player for quick controls
 - Full-screen player with seek controls
+- Favourites tab for bookmarked episodes
 
 ## Getting Started
 
@@ -85,7 +87,7 @@ The app is built using:
 - **just_audio**: Audio playback with background support
 - **audio_service**: Background audio handling
 - **dio**: HTTP client for API requests
-- **shared_preferences**: Local storage for listening progress
+- **shared_preferences**: Local storage for listening progress and favourites
 - **BLoC pattern**: State management
 
 ### Project Structure
@@ -105,6 +107,7 @@ lib/
 │   └── storage_service.dart
 ├── screens/                  # UI screens
 │   ├── archive_screen.dart
+│   ├── favourites_screen.dart
 │   ├── live_stream_screen.dart
 │   └── show_detail_screen.dart
 ├── widgets/                  # Reusable widgets
@@ -149,6 +152,13 @@ The app uses the Bassdrive JSON API:
 - Visual indicators for completed episodes
 - Recently played tracking
 
+### Favourites
+- Bookmark episodes with one tap (heart icon)
+- Dedicated Favourites tab for quick access
+- Sorted by date (newest first)
+- Pull-to-refresh to update list
+- Easy access from any episode list
+
 ## Permissions
 
 ### iOS
@@ -172,6 +182,45 @@ This project is open source and available under the MIT License.
 - Bassdrive.com for the amazing drum & bass radio stream
 - The Flutter team for the excellent framework
 - All the DJs and shows featured in the archive
+
+## Changelog
+
+### Recent Updates
+
+#### Favourites/Bookmarks Feature
+- **New**: Added favourites/bookmarks functionality
+  - Heart icon on every episode to add/remove from favourites
+  - New "Favourites" tab in bottom navigation
+  - Favourited episodes sorted by date (newest first)
+  - Pull-to-refresh on favourites screen
+  - Persistent storage using SharedPreferences
+
+#### Bug Fixes & Improvements
+- Fixed broken widget test
+- Fixed slider value clamping bug in full player
+- Fixed error state handling in audio player service
+- Fixed race condition in progress tracking
+- Fixed missing mounted check in navigation
+- Improved storage efficiency (individual keys per episode)
+- Removed unused dependencies
+- Fixed null safety issues
+
+#### UI/UX Improvements
+- Navigation now closes player view when switching tabs
+- Live stream screen shows "ARCHIVE PLAYING" status
+- Added "Switch to Live Stream" button when archive is playing
+- Added secret developer menu (long press radio icon)
+- Show detail screen stays open when playing episodes
+- Tapping currently playing episode opens full player
+- Episode list improvements:
+  - Fixed playing indicator updates
+  - Fixed progress bar showing 0% when starting/paused
+  - Completed episodes show green checkmark
+  - Only current episode shows play/pause button
+- Progress management fixes:
+  - Progress saves on pause/stop events
+  - Fixed completed episodes showing 99%
+  - Added `clearAllAppState()` for debugging
 
 ## Support
 

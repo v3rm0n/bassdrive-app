@@ -5,6 +5,7 @@ import '../models/listening_progress.dart';
 class StorageService {
   static const String _progressKey = 'listening_progress';
   static const String _completedKey = 'completed_episodes';
+  static const String _favouritesKey = 'favourite_episodes';
 
   static final StorageService _instance = StorageService._internal();
   factory StorageService() => _instance;
@@ -143,5 +144,47 @@ class StorageService {
 
     // Clear all SharedPreferences
     await _prefs!.clear();
+  }
+
+  // ==================== FAVOURITES ====================
+
+  Future<void> addToFavourites(String episodeId) async {
+    if (_prefs == null) await initialize();
+
+    final favourites = await getFavourites();
+    if (!favourites.contains(episodeId)) {
+      favourites.add(episodeId);
+      await _prefs!.setStringList(_favouritesKey, favourites);
+    }
+  }
+
+  Future<void> removeFromFavourites(String episodeId) async {
+    if (_prefs == null) await initialize();
+
+    final favourites = await getFavourites();
+    if (favourites.contains(episodeId)) {
+      favourites.remove(episodeId);
+      await _prefs!.setStringList(_favouritesKey, favourites);
+    }
+  }
+
+  Future<bool> isFavourite(String episodeId) async {
+    if (_prefs == null) await initialize();
+
+    final favourites = await getFavourites();
+    return favourites.contains(episodeId);
+  }
+
+  Future<List<String>> getFavourites() async {
+    if (_prefs == null) await initialize();
+    return _prefs!.getStringList(_favouritesKey) ?? [];
+  }
+
+  Future<void> toggleFavourite(String episodeId) async {
+    if (await isFavourite(episodeId)) {
+      await removeFromFavourites(episodeId);
+    } else {
+      await addToFavourites(episodeId);
+    }
   }
 }
