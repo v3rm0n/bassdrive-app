@@ -79,6 +79,51 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startProgressTracking() {
+    // Track last saved position to avoid unnecessary saves
+    Duration? lastSavedPosition;
+    String? lastEpisodeId;
+
+    // Listen to player state changes to save on pause/stop
+    _playerService.addListener(() async {
+      if (!mounted) return;
+
+      final episode = _playerService.currentEpisode;
+      if (episode == null || _playerService.isLive) return;
+
+      // Save when paused or stopped
+      if (!_playerService.isPlaying &&
+          _playerService.state != PlayerState.loading &&
+          _playerService.state != PlayerState.buffering) {
+        // Only save if position has changed significantly (avoid duplicate saves)
+        final currentPosition = _playerService.position;
+        if (lastEpisodeId != episode.id ||
+            lastSavedPosition == null ||
+            (currentPosition.inMilliseconds - lastSavedPosition!.inMilliseconds)
+                    .abs() >
+                1000) {
+          try {
+            await _storageService.saveProgress(
+              ListeningProgress(
+                episodeId: episode.id,
+                episodeName: episode.displayName,
+                showName: episode.show,
+                position: currentPosition,
+                duration: _playerService.duration > Duration.zero
+                    ? _playerService.duration
+                    : null,
+                lastPlayed: DateTime.now(),
+              ),
+            );
+            lastSavedPosition = currentPosition;
+            lastEpisodeId = episode.id;
+          } catch (e) {
+            debugPrint('Error saving progress on pause: $e');
+          }
+        }
+      }
+    });
+
+    // Periodic save while playing
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 5));
       if (!mounted) return false;
@@ -87,23 +132,40 @@ class _HomeScreenState extends State<HomeScreen> {
           _playerService.isPlaying &&
           !_playerService.isLive) {
         final episode = _playerService.currentEpisode!;
-        await _storageService.saveProgress(
-          ListeningProgress(
-            episodeId: episode.id,
-            episodeName: episode.displayName,
-            showName: episode.show,
-            position: _playerService.position,
-            duration: _playerService.duration > Duration.zero
-                ? _playerService.duration
-                : null,
-            lastPlayed: DateTime.now(),
-          ),
-        );
+        final currentPosition = _playerService.position;
 
-        if (_playerService.duration > Duration.zero &&
-            _playerService.position >=
-                _playerService.duration - const Duration(seconds: 30)) {
-          await _storageService.markEpisodeCompleted(episode.id);
+        try {
+          // Only save if position has changed
+          if (lastEpisodeId != episode.id ||
+              lastSavedPosition == null ||
+              (currentPosition.inMilliseconds -
+                          lastSavedPosition!.inMilliseconds)
+                      .abs() >
+                  1000) {
+            await _storageService.saveProgress(
+              ListeningProgress(
+                episodeId: episode.id,
+                episodeName: episode.displayName,
+                showName: episode.show,
+                position: currentPosition,
+                duration: _playerService.duration > Duration.zero
+                    ? _playerService.duration
+                    : null,
+                lastPlayed: DateTime.now(),
+              ),
+            );
+            lastSavedPosition = currentPosition;
+            lastEpisodeId = episode.id;
+          }
+
+          // Mark as completed if near end
+          if (_playerService.duration > Duration.zero &&
+              _playerService.position >=
+                  _playerService.duration - const Duration(seconds: 30)) {
+            await _storageService.markEpisodeCompleted(episode.id);
+          }
+        } catch (e) {
+          debugPrint('Error saving progress: $e');
         }
       }
 
@@ -217,6 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) {
           setState(() {
             _currentIndex = index;
+            _showFullPlayer = false;
           });
         },
         items: const [

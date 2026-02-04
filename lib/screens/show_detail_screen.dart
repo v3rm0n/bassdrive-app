@@ -61,10 +61,8 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
       ),
     );
 
-    // Navigate back to show the player
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+    // Don't navigate back - let the mini player appear at the bottom
+    // The mini player will be visible in the HomeScreen
   }
 
   @override

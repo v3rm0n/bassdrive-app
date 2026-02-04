@@ -44,9 +44,10 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   }
 
   void _onPlayerChanged() {
-    // Refresh progress when this episode is currently playing
-    if (widget.playerService.currentEpisode?.id == widget.episode.id) {
-      _loadProgress();
+    // Refresh UI when player state changes
+    // This ensures the playing indicator updates when switching between episodes
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -63,9 +64,11 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Check if this episode is loaded in the player (regardless of playing/paused state)
+    final isCurrentEpisode =
+        widget.playerService.currentEpisode?.id == widget.episode.id;
     final isCurrentlyPlaying =
-        widget.playerService.currentEpisode?.id == widget.episode.id &&
-        widget.playerService.isPlaying;
+        isCurrentEpisode && widget.playerService.isPlaying;
 
     if (_isLoading) {
       return ListTile(
@@ -97,12 +100,35 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
       );
     }
 
-    final progress = _progress;
-    final hasProgress =
-        progress != null &&
-        progress.position > const Duration(seconds: 10) &&
-        !progress.isCompleted;
+    // Use player's real-time position/duration when this is the current episode
+    // AND we have valid duration from the player
+    ListeningProgress? progress;
+    if (isCurrentEpisode && widget.playerService.duration > Duration.zero) {
+      progress = ListeningProgress(
+        episodeId: widget.episode.id,
+        episodeName: widget.episode.displayName,
+        showName: widget.episode.show,
+        position: widget.playerService.position,
+        duration: widget.playerService.duration,
+        lastPlayed: DateTime.now(),
+      );
+    } else {
+      // Use stored progress for previously played items
+      progress = _progress;
+    }
+
+    // Show progress indicator if we have position data and it's not completed
+    // Show if position > 0 (not just > 10s) to always show progress for played items
     final isCompleted = progress?.isCompleted ?? false;
+    final hasProgress =
+        progress != null && progress.position > Duration.zero && !isCompleted;
+
+    // Calculate display percentage - use stored percentage if available, otherwise calculate
+    // If we have position but no duration, we can't show percentage but we still show progress exists
+    final progressPercentage =
+        (progress?.duration != null && progress!.duration!.inMilliseconds > 0)
+            ? progress.progressPercentage
+            : 0.0;
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -119,13 +145,13 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           isCurrentlyPlaying
               ? Icons.equalizer
               : isCompleted
-              ? Icons.check_circle
-              : Icons.music_note,
+                  ? Icons.check_circle
+                  : Icons.music_note,
           color: isCurrentlyPlaying
               ? theme.colorScheme.primary
               : isCompleted
-              ? Colors.green
-              : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ? Colors.green
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
         ),
       ),
       title: Text(
@@ -154,7 +180,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(2),
                     child: LinearProgressIndicator(
-                      value: progress.progressPercentage,
+                      value: progressPercentage,
                       backgroundColor: theme.dividerColor,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         theme.colorScheme.primary,
@@ -165,7 +191,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${(progress.progressPercentage * 100).toInt()}%',
+                  '${(progressPercentage * 100).toInt()}%',
                   style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
                 ),
               ],
@@ -180,7 +206,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
             ),
         ],
       ),
-      trailing: isCurrentlyPlaying
+      trailing: isCurrentEpisode
           ? IconButton(
               icon: Icon(
                 widget.playerService.isPlaying
@@ -196,11 +222,6 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                   widget.playerService.play();
                 }
               },
-            )
-          : hasProgress
-          ? IconButton(
-              icon: const Icon(Icons.play_circle_outline),
-              onPressed: widget.onTap,
             )
           : null,
       onTap: widget.onTap,

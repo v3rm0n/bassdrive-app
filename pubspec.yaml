@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.8
+  sdk: ^3.0.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -36,24 +36,15 @@ dependencies:
   audio_service: ^0.18.18
   just_audio_background: ^0.0.1-beta.17
 
-  # State management
-  flutter_bloc: ^9.1.1
-  equatable: ^2.0.8
-
   # Networking
   dio: ^5.9.1
 
   # Local storage
-  shared_preferences: ^2.5.4
+  shared_preferences: ^2.3.0
 
   # UI
   cupertino_icons: ^1.0.8
-  google_fonts: ^8.0.0
-  shimmer: ^3.0.0
-
-  # Utils
-  intl: ^0.20.2
-  path_provider: ^2.1.5
+  google_fonts: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -64,7 +55,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^6.0.0
+  flutter_lints: ^5.0.0
 
   # App icon generator
   flutter_launcher_icons: ^0.13.1

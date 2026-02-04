@@ -19,46 +19,54 @@ class StorageService {
   Future<void> saveProgress(ListeningProgress progress) async {
     if (_prefs == null) await initialize();
 
-    final allProgress = await getAllProgress();
-    allProgress[progress.episodeId] = progress;
-
-    final jsonMap = allProgress.map(
-      (key, value) => MapEntry(key, value.toJson()),
-    );
-
-    await _prefs!.setString(_progressKey, jsonEncode(jsonMap));
+    final key = '$_progressKey.${progress.episodeId}';
+    await _prefs!.setString(key, jsonEncode(progress.toJson()));
   }
 
   Future<ListeningProgress?> getProgress(String episodeId) async {
     if (_prefs == null) await initialize();
 
-    final allProgress = await getAllProgress();
-    return allProgress[episodeId];
+    final key = '$_progressKey.$episodeId';
+    final jsonString = _prefs!.getString(key);
+    if (jsonString == null) return null;
+
+    try {
+      final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+      return ListeningProgress.fromJson(jsonMap);
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<Map<String, ListeningProgress>> getAllProgress() async {
     if (_prefs == null) await initialize();
 
-    final jsonString = _prefs!.getString(_progressKey);
-    if (jsonString == null) return {};
+    final allProgress = <String, ListeningProgress>{};
+    final allKeys = _prefs!.getKeys().where(
+      (key) => key.startsWith('$_progressKey.'),
+    );
 
-    try {
-      final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      return jsonMap.map(
-        (key, value) => MapEntry(
-          key,
-          ListeningProgress.fromJson(value as Map<String, dynamic>),
-        ),
-      );
-    } catch (e) {
-      return {};
+    for (final key in allKeys) {
+      final jsonString = _prefs!.getString(key);
+      if (jsonString != null) {
+        try {
+          final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+          final progress = ListeningProgress.fromJson(jsonMap);
+          allProgress[progress.episodeId] = progress;
+        } catch (e) {
+          // Skip invalid entries
+        }
+      }
     }
+
+    return allProgress;
   }
 
   Future<List<ListeningProgress>> getRecentProgress({int limit = 20}) async {
     final allProgress = await getAllProgress();
-    final sorted = allProgress.values.toList()
-      ..sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
+    final sorted =
+        allProgress.values.toList()
+          ..sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
     return sorted.take(limit).toList();
   }
 
@@ -85,19 +93,20 @@ class StorageService {
   Future<void> clearProgress(String episodeId) async {
     if (_prefs == null) await initialize();
 
-    final allProgress = await getAllProgress();
-    allProgress.remove(episodeId);
-
-    final jsonMap = allProgress.map(
-      (key, value) => MapEntry(key, value.toJson()),
-    );
-
-    await _prefs!.setString(_progressKey, jsonEncode(jsonMap));
+    final key = '$_progressKey.$episodeId';
+    await _prefs!.remove(key);
   }
 
   Future<void> clearAllProgress() async {
     if (_prefs == null) await initialize();
-    await _prefs!.remove(_progressKey);
+
+    // Remove all progress keys
+    final allKeys = _prefs!.getKeys().where(
+      (key) => key.startsWith('$_progressKey.'),
+    );
+    for (final key in allKeys) {
+      await _prefs!.remove(key);
+    }
     await _prefs!.remove(_completedKey);
   }
 }

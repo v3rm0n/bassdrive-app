@@ -15,8 +15,9 @@ class LiveStreamScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool showPlayButton =
-        !playerService.isLive && !playerService.isPlaying;
+    final bool isLivePlaying = playerService.isLive && playerService.isPlaying;
+    final bool isArchivePlaying =
+        playerService.currentEpisode != null && !playerService.isLive;
 
     return Scaffold(
       body: SafeArea(
@@ -57,7 +58,7 @@ class LiveStreamScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '24/7 Drum \u0026 Bass Radio',
+                '24/7 Drum & Bass Radio',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.primary,
                 ),
@@ -70,7 +71,7 @@ class LiveStreamScreen extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: playerService.isPlaying && playerService.isLive
+                  color: isLivePlaying
                       ? Colors.green.withValues(alpha: 0.2)
                       : theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
@@ -78,7 +79,7 @@ class LiveStreamScreen extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (playerService.isPlaying && playerService.isLive)
+                    if (isLivePlaying)
                       Container(
                         width: 8,
                         height: 8,
@@ -89,15 +90,19 @@ class LiveStreamScreen extends StatelessWidget {
                         ),
                       ),
                     Text(
-                      playerService.isPlaying && playerService.isLive
+                      isLivePlaying
                           ? 'LIVE'
-                          : 'OFFLINE',
+                          : isArchivePlaying
+                              ? 'ARCHIVE PLAYING'
+                              : 'READY',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: playerService.isPlaying && playerService.isLive
+                        color: isLivePlaying
                             ? Colors.green
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
+                            : isArchivePlaying
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -128,7 +133,78 @@ class LiveStreamScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-              if (showPlayButton)
+              if (isArchivePlaying) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.music_note,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Currently Playing Archive',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              playerService.currentEpisode?.displayName ??
+                                  'Unknown',
+                              style: theme.textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        playerService.playLiveStream(liveStreamUrl),
+                    icon: const Icon(Icons.radio, size: 28),
+                    label: const Text(
+                      'Switch to Live Stream',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+              ] else if (isLivePlaying)
+                AudioControls(
+                  playerService: playerService,
+                  showSkipButtons: false,
+                  iconSize: 48,
+                )
+              else
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -151,12 +227,6 @@ class LiveStreamScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                )
-              else
-                AudioControls(
-                  playerService: playerService,
-                  showSkipButtons: false,
-                  iconSize: 48,
                 ),
               const SizedBox(height: 40),
             ],
