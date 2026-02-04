@@ -10,6 +10,7 @@ import 'widgets/full_player.dart';
 import 'widgets/mini_player.dart';
 import 'screens/archive_screen.dart';
 import 'screens/favourites_screen.dart';
+import 'screens/listening_stats_screen.dart';
 import 'screens/live_stream_screen.dart';
 
 void main() async {
@@ -274,6 +275,9 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
       ),
+      ListeningStatsScreen(
+        storageService: _storageService,
+      ),
     ];
 
     return Scaffold(
@@ -308,6 +312,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Favourites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Stats',
           ),
         ],
       ),

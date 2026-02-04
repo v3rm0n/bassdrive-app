@@ -6,6 +6,8 @@ class StorageService {
   static const String _progressKey = 'listening_progress';
   static const String _completedKey = 'completed_episodes';
   static const String _favouritesKey = 'favourite_episodes';
+  static const String _liveStreamTimeKey = 'live_stream_listening_time';
+  static const String _archivesTimeKey = 'archives_listening_time';
 
   static final StorageService _instance = StorageService._internal();
   factory StorageService() => _instance;
@@ -186,5 +188,53 @@ class StorageService {
     } else {
       await addToFavourites(episodeId);
     }
+  }
+
+  // ==================== LISTENING TIME TRACKING ====================
+
+  Future<void> addLiveStreamListeningTime(Duration duration) async {
+    if (_prefs == null) await initialize();
+
+    final currentTime = await getLiveStreamListeningTime();
+    final newTime = currentTime + duration;
+    await _prefs!.setInt(_liveStreamTimeKey, newTime.inSeconds);
+  }
+
+  Future<Duration> getLiveStreamListeningTime() async {
+    if (_prefs == null) await initialize();
+
+    final seconds = _prefs!.getInt(_liveStreamTimeKey) ?? 0;
+    return Duration(seconds: seconds);
+  }
+
+  Future<void> addArchivesListeningTime(Duration duration) async {
+    if (_prefs == null) await initialize();
+
+    final currentTime = await getArchivesListeningTime();
+    final newTime = currentTime + duration;
+    await _prefs!.setInt(_archivesTimeKey, newTime.inSeconds);
+  }
+
+  Future<Duration> getArchivesListeningTime() async {
+    if (_prefs == null) await initialize();
+
+    final seconds = _prefs!.getInt(_archivesTimeKey) ?? 0;
+    return Duration(seconds: seconds);
+  }
+
+  Future<Map<String, Duration>> getAllListeningTime() async {
+    return {
+      'liveStream': await getLiveStreamListeningTime(),
+      'archives': await getArchivesListeningTime(),
+      'total':
+          await getLiveStreamListeningTime() + await getArchivesListeningTime(),
+    };
+  }
+
+  Future<void> resetListeningTime() async {
+    if (_prefs == null) await initialize();
+
+    await _prefs!.remove(_liveStreamTimeKey);
+    await _prefs!.remove(_archivesTimeKey);
   }
 }

@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import '../models/episode.dart';
+import '../services/storage_service.dart';
 
 enum PlayerState { idle, loading, playing, paused, buffering, error }
 
 class AudioPlayerService extends ChangeNotifier {
   final AudioPlayer _player = AudioPlayer();
+  final StorageService _storageService = StorageService();
 
   PlayerState _state = PlayerState.idle;
   Episode? _currentEpisode;
@@ -15,6 +18,11 @@ class AudioPlayerService extends ChangeNotifier {
   Duration _duration = Duration.zero;
   bool _isLive = false;
   String? _error;
+
+  // Listening time tracking
+  DateTime? _playbackStartTime;
+  Timer? _listeningTimeTimer;
+  static const _listeningTimeInterval = Duration(seconds: 10);
 
   AudioPlayerService() {
     _initializePlayer();
@@ -36,17 +44,23 @@ class AudioPlayerService extends ChangeNotifier {
     _player.playerStateStream.listen((state) {
       if (state.playing) {
         _state = PlayerState.playing;
+        _startListeningTimeTracking();
       } else if (state.processingState == ProcessingState.loading ||
           state.processingState == ProcessingState.buffering) {
         _state = PlayerState.buffering;
+        _stopListeningTimeTracking();
       } else if (state.processingState == ProcessingState.ready) {
         _state = PlayerState.paused;
+        _stopListeningTimeTracking();
       } else if (state.processingState == ProcessingState.idle) {
         _state = PlayerState.idle;
+        _stopListeningTimeTracking();
       } else if (state.processingState == ProcessingState.completed) {
         _state = PlayerState.idle;
         _currentEpisode = null;
+        _stopListeningTimeTracking();
       }
+
       notifyListeners();
     });
 
@@ -55,9 +69,50 @@ class AudioPlayerService extends ChangeNotifier {
       onError: (Object e, StackTrace st) {
         _error = e.toString();
         _state = PlayerState.error;
+        _stopListeningTimeTracking();
         notifyListeners();
       },
     );
+  }
+
+  void _startListeningTimeTracking() {
+    _playbackStartTime ??= DateTime.now();
+
+    // Cancel any existing timer
+    _listeningTimeTimer?.cancel();
+
+    // Start a periodic timer to save listening time every 10 seconds
+    _listeningTimeTimer = Timer.periodic(_listeningTimeInterval, (_) {
+      _saveListeningTimeChunk();
+    });
+  }
+
+  void _stopListeningTimeTracking() {
+    // Save any accumulated time
+    _saveListeningTimeChunk();
+
+    // Cancel the timer
+    _listeningTimeTimer?.cancel();
+    _listeningTimeTimer = null;
+    _playbackStartTime = null;
+  }
+
+  void _saveListeningTimeChunk() {
+    if (_playbackStartTime == null) return;
+
+    final now = DateTime.now();
+    final elapsed = now.difference(_playbackStartTime!);
+
+    if (elapsed.inSeconds > 0) {
+      if (_isLive) {
+        _storageService.addLiveStreamListeningTime(elapsed);
+      } else {
+        _storageService.addArchivesListeningTime(elapsed);
+      }
+    }
+
+    // Reset the start time
+    _playbackStartTime = now;
   }
 
   PlayerState get state => _state;
@@ -77,6 +132,7 @@ class AudioPlayerService extends ChangeNotifier {
       _isLive = true;
       _currentEpisode = null;
       _error = null;
+      _stopListeningTimeTracking();
       notifyListeners();
 
       _liveStreamUrl = url;
@@ -97,6 +153,7 @@ class AudioPlayerService extends ChangeNotifier {
     } catch (e) {
       _error = 'Failed to play live stream: $e';
       _state = PlayerState.error;
+      _stopListeningTimeTracking();
       notifyListeners();
     }
   }
@@ -107,6 +164,7 @@ class AudioPlayerService extends ChangeNotifier {
       _isLive = false;
       _currentEpisode = episode;
       _error = null;
+      _stopListeningTimeTracking();
       notifyListeners();
 
       await _player.setAudioSource(
@@ -129,6 +187,7 @@ class AudioPlayerService extends ChangeNotifier {
     } catch (e) {
       _error = 'Failed to play episode: $e';
       _state = PlayerState.error;
+      _stopListeningTimeTracking();
       notifyListeners();
     }
   }
@@ -165,6 +224,7 @@ class AudioPlayerService extends ChangeNotifier {
     _currentEpisode = null;
     _isLive = false;
     _state = PlayerState.idle;
+    _stopListeningTimeTracking();
     notifyListeners();
   }
 
@@ -180,6 +240,7 @@ class AudioPlayerService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _stopListeningTimeTracking();
     _player.dispose();
     super.dispose();
   }
