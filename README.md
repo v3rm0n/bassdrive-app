@@ -1,6 +1,6 @@
 # Bassdrive Radio App
 
-A cross-platform mobile application for listening to Bassdrive Internet radio. Built with Flutter for iOS and Android.
+A cross-platform application for listening to Bassdrive Internet radio. Built with Flutter for iOS, Android, macOS, and Windows.
 
 <p float="left">
   <img src="/screenshots/IMAGE1.PNG" width="24%" />
@@ -17,7 +17,10 @@ A cross-platform mobile application for listening to Bassdrive Internet radio. B
 - **Listening History**: Automatically tracks which episodes you've listened to
 - **Progress Tracking**: Saves your listening position and resumes where you left off
 - **Favourites/Bookmarks**: Save your favourite episodes for quick access
+- **Filter & Sort**: Search and sort favourites by date, name, or show
+- **Listening Statistics**: Track total listening time for live stream and archives
 - **Background Playback**: Continue listening while using other apps
+- **Desktop Optimized**: Sidebar navigation and desktop-style player bar on macOS/Windows
 - **Modern UI**: Clean, dark-themed interface optimized for music apps
 - **No Authentication**: Open and free to use
 
@@ -65,6 +68,16 @@ flutter run -d ios
 flutter run -d android
 ```
 
+**macOS:**
+```bash
+flutter run -d macos
+```
+
+**Windows:**
+```bash
+flutter run -d windows
+```
+
 ### Building for Production
 
 **iOS:**
@@ -79,6 +92,16 @@ flutter build apk --release
 flutter build appbundle --release
 ```
 
+**macOS:**
+```bash
+flutter build macos --release
+```
+
+**Windows:**
+```bash
+flutter build windows --release
+```
+
 ## Architecture
 
 The app is built using:
@@ -87,7 +110,7 @@ The app is built using:
 - **just_audio**: Audio playback with background support
 - **audio_service**: Background audio handling
 - **dio**: HTTP client for API requests
-- **shared_preferences**: Local storage for listening progress and favourites
+- **shared_preferences**: Local storage for listening progress, favourites, and statistics
 - **BLoC pattern**: State management
 
 ### Project Structure
@@ -108,15 +131,19 @@ lib/
 ├── screens/                  # UI screens
 │   ├── archive_screen.dart
 │   ├── favourites_screen.dart
+│   ├── listening_stats_screen.dart
 │   ├── live_stream_screen.dart
 │   └── show_detail_screen.dart
 ├── widgets/                  # Reusable widgets
+│   ├── adaptive_navigation.dart
 │   ├── audio_controls.dart
+│   ├── desktop_player_bar.dart
 │   ├── episode_list_item.dart
 │   ├── full_player.dart
 │   ├── mini_player.dart
 │   └── show_list_item.dart
 └── utils/                    # Utilities
+    ├── platform_utils.dart
     └── theme.dart
 ```
 
@@ -155,9 +182,39 @@ The app uses the Bassdrive JSON API:
 ### Favourites
 - Bookmark episodes with one tap (heart icon)
 - Dedicated Favourites tab for quick access
-- Sorted by date (newest first)
+- **Filter & Sort Options**:
+  - Sort by date (newest/oldest)
+  - Sort by name (A-Z/Z-A)
+  - Sort by show name (A-Z/Z-A)
+  - Search by episode or show name
+  - Filter by specific show
 - Pull-to-refresh to update list
 - Easy access from any episode list
+
+### Listening Statistics
+- Track total listening time across all sessions
+- Separate tracking for:
+  - Live stream listening time
+  - Archives listening time (aggregated)
+- Visual breakdown with percentages
+- Persistent storage of statistics
+- Option to reset statistics
+
+## Platform Support
+
+### Mobile (iOS & Android)
+- Bottom navigation bar
+- Mini player at bottom
+- Touch-optimized interface
+
+### Desktop (macOS & Windows)
+- Sidebar navigation (280px width)
+- Desktop player bar at bottom with:
+  - Track info with artwork
+  - Playback controls with progress bar
+  - Volume and extra controls
+- Window-sized layout (1280x720 default)
+- Mouse-optimized interface
 
 ## Permissions
 
@@ -168,6 +225,11 @@ The app uses the Bassdrive JSON API:
 - Internet access
 - Wake lock (prevent sleep during playback)
 - Foreground service (for background playback)
+
+### macOS
+- Network client entitlement (for API and streaming)
+- App Transport Security configured for HTTP streams
+- App sandbox enabled
 
 ## Contributing
 
@@ -187,7 +249,31 @@ This project is open source and available under the MIT License.
 
 ### Recent Updates
 
-#### Favourites/Bookmarks Feature
+#### Desktop Support (v0.0.5)
+- **New**: Full desktop support for macOS and Windows
+  - Adaptive UI with sidebar navigation on desktop
+  - Desktop-optimized player bar with full controls
+  - Platform-specific layouts (mobile vs desktop)
+  - GitHub Actions workflow for automated releases on all platforms
+
+#### Listening Statistics (v0.0.4)
+- **New**: Track listening time statistics
+  - Separate tracking for live stream and archives
+  - Visual breakdown with percentages
+  - Persistent storage of total listening time
+  - New "Stats" tab in navigation
+  - Option to reset statistics
+
+#### Filter & Sort for Favourites (v0.0.3)
+- **New**: Enhanced favourites management
+  - Sort by date (newest/oldest)
+  - Sort by name (A-Z/Z-A)
+  - Sort by show name (A-Z/Z-A)
+  - Search within favourites
+  - Filter by specific show
+  - Active filter indicators with quick clear
+
+#### Favourites/Bookmarks Feature (v0.0.2)
 - **New**: Added favourites/bookmarks functionality
   - Heart icon on every episode to add/remove from favourites
   - New "Favourites" tab in bottom navigation
@@ -204,6 +290,8 @@ This project is open source and available under the MIT License.
 - Improved storage efficiency (individual keys per episode)
 - Removed unused dependencies
 - Fixed null safety issues
+- Fixed macOS network entitlements for API access
+- Fixed macOS App Transport Security for HTTP streams
 
 #### UI/UX Improvements
 - Navigation now closes player view when switching tabs
