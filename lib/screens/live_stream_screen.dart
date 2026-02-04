@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
-import '../widgets/audio_controls.dart';
 
 class LiveStreamScreen extends StatelessWidget {
   final AudioPlayerService playerService;
@@ -205,13 +204,7 @@ class LiveStreamScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-              ] else if (isLivePlaying)
-                AudioControls(
-                  playerService: playerService,
-                  showSkipButtons: false,
-                  iconSize: 48,
-                )
-              else
+              ] else if (!isLivePlaying)
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -234,7 +227,9 @@ class LiveStreamScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
+                )
+              else
+                const SizedBox(width: double.infinity, height: 56),
               const SizedBox(height: 40),
             ],
           ),

@@ -5,7 +5,10 @@ import 'models/listening_progress.dart';
 import 'services/api_service.dart';
 import 'services/audio_player_service.dart';
 import 'services/storage_service.dart';
+import 'utils/platform_utils.dart';
 import 'utils/theme.dart';
+import 'widgets/adaptive_navigation.dart';
+import 'widgets/desktop_player_bar.dart';
 import 'widgets/full_player.dart';
 import 'widgets/mini_player.dart';
 import 'screens/archive_screen.dart';
@@ -280,6 +283,75 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ];
 
+    final destinations = const [
+      NavigationItem(
+        icon: Icons.radio_outlined,
+        selectedIcon: Icons.radio,
+        label: 'Live',
+        index: 0,
+      ),
+      NavigationItem(
+        icon: Icons.library_music_outlined,
+        selectedIcon: Icons.library_music,
+        label: 'Archive',
+        index: 1,
+      ),
+      NavigationItem(
+        icon: Icons.favorite_outline,
+        selectedIcon: Icons.favorite,
+        label: 'Favourites',
+        index: 2,
+      ),
+      NavigationItem(
+        icon: Icons.bar_chart_outlined,
+        selectedIcon: Icons.bar_chart,
+        label: 'Stats',
+        index: 3,
+      ),
+    ];
+
+    // Desktop layout
+    if (PlatformUtils.isDesktop) {
+      return Scaffold(
+        body: AdaptiveNavigation(
+          currentIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+              _showFullPlayer = false;
+            });
+          },
+          destinations: destinations,
+          content: Column(
+            children: [
+              Expanded(child: screens[_currentIndex]),
+              if (_playerService.currentEpisode != null ||
+                  _playerService.isLive)
+                DesktopPlayerBar(
+                  playerService: _playerService,
+                  onOpenFullPlayer: () {
+                    setState(() {
+                      _showFullPlayer = true;
+                    });
+                  },
+                ),
+            ],
+          ),
+        ),
+        bottomSheet: _showFullPlayer
+            ? FullPlayer(
+                playerService: _playerService,
+                onClose: () {
+                  setState(() {
+                    _showFullPlayer = false;
+                  });
+                },
+              )
+            : null,
+      );
+    }
+
+    // Mobile layout
     return Scaffold(
       body: Column(
         children: [
