@@ -79,7 +79,7 @@ jobs:
             --icon-size 100 \
             --app-drop-link 600 185 \
             "Bassdrive-Radio-macOS.dmg" \
-            "build/macos/Build/Products/Release/bassdrive_radio.app"
+            "build/macos/Build/Products/Release/Bassdrive Radio.app"
       
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
