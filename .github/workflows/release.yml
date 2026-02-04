@@ -1,4 +1,4 @@
-name: Build and Release Android APK
+name: Build and Release
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
     
@@ -47,11 +47,112 @@ jobs:
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+  build-macos:
+    name: Build macOS App
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Get dependencies
+        run: flutter pub get
+      
+      - name: Build macOS
+        run: flutter build macos --release
+      
+      - name: Create DMG
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "Bassdrive Radio" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            "Bassdrive-Radio-macOS.dmg" \
+            "build/macos/Build/Products/Release/bassdrive_radio.app"
+      
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: Bassdrive-Radio-macOS.dmg
+
+  build-windows:
+    name: Build Windows App
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Get dependencies
+        run: flutter pub get
+      
+      - name: Build Windows
+        run: flutter build windows --release
+      
+      - name: Create ZIP archive
+        run: |
+          cd build/windows/x64/runner/Release
+          7z a -tzip ../../../../../../Bassdrive-Radio-Windows.zip *
+      
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: Bassdrive-Radio-Windows.zip
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-android, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download Android artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+          path: ./artifacts/
+      
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos
+          path: ./artifacts/
+      
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows
+          path: ./artifacts/
+      
+      - name: List artifacts
+        run: ls -la ./artifacts/
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            ./artifacts/app-release.apk
+            ./artifacts/Bassdrive-Radio-macOS.dmg
+            ./artifacts/Bassdrive-Radio-Windows.zip
           name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
