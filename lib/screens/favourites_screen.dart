@@ -289,7 +289,12 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<SortOption>(
-                              value: _currentSort,
+                              initialValue: _currentSort,
+                              onChanged: (value) {
+                                if (value != null) {
+                                  _onSortChanged(value);
+                                }
+                              },
                               decoration: InputDecoration(
                                 labelText: 'Sort by',
                                 border: OutlineInputBorder(
@@ -316,11 +321,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                                   ),
                                 );
                               }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  _onSortChanged(value);
-                                }
-                              },
                             ),
                           ),
                         ],
@@ -332,7 +332,8 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String?>(
-                                value: _selectedShowFilter,
+                                initialValue: _selectedShowFilter,
+                                onChanged: _onShowFilterChanged,
                                 decoration: InputDecoration(
                                   labelText: 'Filter by show',
                                   border: OutlineInputBorder(
@@ -358,7 +359,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                                     );
                                   }),
                                 ],
-                                onChanged: _onShowFilterChanged,
                               ),
                             ),
                           ],

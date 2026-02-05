@@ -90,6 +90,58 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
     await _loadFavouriteStatus();
   }
 
+  Future<void> _downloadEpisode() async {
+    await _downloadService.downloadEpisode(widget.episode);
+  }
+
+  Widget _buildDownloadButton(ThemeData theme) {
+    final status = _downloadService.getDownloadStatus(widget.episode.id);
+    final progress = _downloadService.getDownloadProgress(widget.episode.id);
+
+    switch (status) {
+      case DownloadStatus.downloaded:
+        return IconButton(
+          icon: const Icon(Icons.download_done),
+          iconSize: 24,
+          color: theme.colorScheme.primary,
+          onPressed: null, // Already downloaded
+        );
+      case DownloadStatus.downloading:
+        return SizedBox(
+          width: 40,
+          height: 40,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CircularProgressIndicator(
+                value: progress,
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: theme.textTheme.bodySmall?.copyWith(fontSize: 8),
+              ),
+            ],
+          ),
+        );
+      case DownloadStatus.error:
+        return IconButton(
+          icon: const Icon(Icons.error_outline),
+          iconSize: 24,
+          color: Colors.red,
+          onPressed: _downloadEpisode,
+        );
+      case DownloadStatus.notDownloaded:
+        return IconButton(
+          icon: const Icon(Icons.download_outlined),
+          iconSize: 24,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+          onPressed: _downloadEpisode,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -255,6 +307,8 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Download button
+              _buildDownloadButton(theme),
               IconButton(
                 icon: Icon(
                   _isFavourite ? Icons.favorite : Icons.favorite_border,
