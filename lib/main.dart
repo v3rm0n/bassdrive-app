@@ -4,6 +4,7 @@ import 'models/api_response.dart';
 import 'models/listening_progress.dart';
 import 'services/api_service.dart';
 import 'services/audio_player_service.dart';
+import 'services/download_service.dart';
 import 'services/storage_service.dart';
 import 'utils/platform_utils.dart';
 import 'utils/theme.dart';
@@ -12,6 +13,7 @@ import 'widgets/desktop_player_bar.dart';
 import 'widgets/full_player.dart';
 import 'widgets/mini_player.dart';
 import 'screens/archive_screen.dart';
+import 'screens/downloads_screen.dart';
 import 'screens/favourites_screen.dart';
 import 'screens/listening_stats_screen.dart';
 import 'screens/live_stream_screen.dart';
@@ -26,6 +28,7 @@ void main() async {
   );
 
   await StorageService().initialize();
+  await DownloadService().initialize();
 
   runApp(const BassdriveApp());
 }
@@ -278,6 +281,15 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
       ),
+      DownloadsScreen(
+        playerService: _playerService,
+        storageService: _storageService,
+        onOpenPlayer: () {
+          setState(() {
+            _showFullPlayer = true;
+          });
+        },
+      ),
       ListeningStatsScreen(
         storageService: _storageService,
       ),
@@ -303,10 +315,16 @@ class _HomeScreenState extends State<HomeScreen> {
         index: 2,
       ),
       NavigationItem(
+        icon: Icons.download_outlined,
+        selectedIcon: Icons.download,
+        label: 'Downloads',
+        index: 3,
+      ),
+      NavigationItem(
         icon: Icons.bar_chart_outlined,
         selectedIcon: Icons.bar_chart,
         label: 'Stats',
-        index: 3,
+        index: 4,
       ),
     ];
 
@@ -384,6 +402,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Favourites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.download),
+            label: 'Downloads',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),

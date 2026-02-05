@@ -1,6 +1,6 @@
 # Bassdrive Radio App
 
-A cross-platform application for listening to Bassdrive Internet radio. Built with Flutter for iOS, Android, macOS, and Windows.
+A cross-platform application for listening to Bassdrive Internet radio. Built with Flutter for iOS, Android, macOS, Windows, and Linux.
 
 [![Latest Release](https://img.shields.io/github/v/release/v3rm0n/bassdrive-app?label=latest%20release&style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/releases/latest)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/v3rm0n/bassdrive-app/release.yml?style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/actions)
@@ -10,6 +10,7 @@ A cross-platform application for listening to Bassdrive Internet radio. Built wi
 [![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/app-release.apk)
 [![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-macOS.dmg)
 [![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Windows.zip)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Linux.tar.gz)
 
 <p float="left">
   <img src="/screenshots/IMAGE1.PNG" width="24%" />
@@ -80,6 +81,9 @@ flutter build macos --release
 
 # Windows
 flutter build windows --release
+
+# Linux
+flutter build linux --release
 ```
 
 ## Architecture
@@ -118,7 +122,7 @@ The app uses the Bassdrive JSON API:
 - Mini player at bottom
 - Touch-optimized interface
 
-### Desktop (macOS & Windows)
+### Desktop (macOS, Windows & Linux)
 - Sidebar navigation (280px width)
 - Desktop player bar at bottom
 - Window-sized layout (1280x720 default)
@@ -139,6 +143,11 @@ The app uses the Bassdrive JSON API:
 - App Transport Security configured for HTTP streams
 - App sandbox enabled
 
+### Linux
+- No special permissions required
+- Tested on Ubuntu 22.04+
+- Requires GTK3 development libraries for building
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -154,6 +163,10 @@ This project is open source and available under the MIT License.
 - All the DJs and shows featured in the archive
 
 ## Changelog
+
+### v0.0.9
+- Added Linux support with automated builds
+- Updated GitHub Actions workflow to build and release Linux tarball
 
 ### v0.0.8
 - Fixed Android launch issue by updating NDK version to 28.0.12433566

@@ -2,23 +2,26 @@ import 'package:flutter/material.dart';
 import '../models/episode.dart';
 import '../models/listening_progress.dart';
 import '../models/show.dart';
+import '../services/download_service.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
 
 class EpisodeListItem extends StatefulWidget {
   final Episode episode;
-  final Show show;
+  final Show? show;
   final AudioPlayerService playerService;
   final StorageService storageService;
   final VoidCallback? onTap;
+  final Widget? trailing;
 
   const EpisodeListItem({
     super.key,
     required this.episode,
-    required this.show,
+    this.show,
     required this.playerService,
     required this.storageService,
     this.onTap,
+    this.trailing,
   });
 
   @override
@@ -29,6 +32,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   ListeningProgress? _progress;
   bool _isLoading = true;
   bool _isFavourite = false;
+  final DownloadService _downloadService = DownloadService();
 
   @override
   void initState() {
@@ -37,11 +41,19 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
     _loadFavouriteStatus();
     // Listen to player changes to update progress display
     widget.playerService.addListener(_onPlayerChanged);
+    _downloadService.addListener(_onDownloadStateChanged);
+  }
+
+  void _onDownloadStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
     widget.playerService.removeListener(_onPlayerChanged);
+    _downloadService.removeListener(_onDownloadStateChanged);
     super.dispose();
   }
 
@@ -201,6 +213,15 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                   color: Colors.green,
                 ),
               ],
+              // Download indicator
+              if (_downloadService.isDownloaded(widget.episode.id)) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.download_done,
+                  size: 14,
+                  color: theme.colorScheme.primary,
+                ),
+              ],
             ],
           ),
           if (hasProgress) ...[
@@ -230,38 +251,39 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           ],
         ],
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: Icon(
-              _isFavourite ? Icons.favorite : Icons.favorite_border,
-            ),
-            iconSize: 24,
-            color: _isFavourite
-                ? Colors.red
-                : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            onPressed: _toggleFavourite,
-          ),
-          if (isCurrentEpisode)
-            IconButton(
-              icon: Icon(
-                widget.playerService.isPlaying
-                    ? Icons.pause_circle_filled
-                    : Icons.play_circle_filled,
+      trailing: widget.trailing ??
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(
+                  _isFavourite ? Icons.favorite : Icons.favorite_border,
+                ),
+                iconSize: 24,
+                color: _isFavourite
+                    ? Colors.red
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                onPressed: _toggleFavourite,
               ),
-              iconSize: 32,
-              color: theme.colorScheme.primary,
-              onPressed: () {
-                if (widget.playerService.isPlaying) {
-                  widget.playerService.pause();
-                } else {
-                  widget.playerService.play();
-                }
-              },
-            ),
-        ],
-      ),
+              if (isCurrentEpisode)
+                IconButton(
+                  icon: Icon(
+                    widget.playerService.isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_filled,
+                  ),
+                  iconSize: 32,
+                  color: theme.colorScheme.primary,
+                  onPressed: () {
+                    if (widget.playerService.isPlaying) {
+                      widget.playerService.pause();
+                    } else {
+                      widget.playerService.play();
+                    }
+                  },
+                ),
+            ],
+          ),
       onTap: widget.onTap,
     );
   }

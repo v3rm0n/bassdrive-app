@@ -1,15 +1,18 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import '../models/episode.dart';
 import '../services/storage_service.dart';
+import '../services/download_service.dart';
 
 enum PlayerState { idle, loading, playing, paused, buffering, error }
 
 class AudioPlayerService extends ChangeNotifier {
   final AudioPlayer _player = AudioPlayer();
   final StorageService _storageService = StorageService();
+  final DownloadService _downloadService = DownloadService();
 
   PlayerState _state = PlayerState.idle;
   Episode? _currentEpisode;
@@ -167,9 +170,19 @@ class AudioPlayerService extends ChangeNotifier {
       _stopListeningTimeTracking();
       notifyListeners();
 
+      // Check if episode is downloaded locally
+      String audioUrl = episode.encodedUrl;
+      final localPath = await _downloadService.getLocalPath(episode.id);
+      if (localPath != null) {
+        final file = File(localPath);
+        if (await file.exists()) {
+          audioUrl = localPath;
+        }
+      }
+
       await _player.setAudioSource(
         AudioSource.uri(
-          Uri.parse(episode.encodedUrl),
+          Uri.parse(audioUrl),
           tag: MediaItem(
             id: episode.id,
             title: episode.displayName,
@@ -184,6 +197,9 @@ class AudioPlayerService extends ChangeNotifier {
       }
 
       await _player.play();
+
+      // Automatically download episode for offline listening
+      _downloadService.downloadEpisode(episode);
     } catch (e) {
       _error = 'Failed to play episode: $e';
       _state = PlayerState.error;
