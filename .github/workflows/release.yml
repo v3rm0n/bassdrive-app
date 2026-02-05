@@ -30,6 +30,9 @@ jobs:
           channel: 'stable'
           cache: true
       
+      - name: Accept Android SDK licenses
+        run: yes | flutter doctor --android-licenses
+      
       - name: Get dependencies
         run: flutter pub get
       
