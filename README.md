@@ -155,6 +155,12 @@ This project is open source and available under the MIT License.
 
 ## Changelog
 
+### v0.0.8
+- Fixed Android launch issue by updating NDK version to 28.0.12433566
+
+### v0.0.7
+- Fixed Android release builds
+
 ### v0.0.6
 - Update Windows and macOS icons and application name
 
