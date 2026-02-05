@@ -150,7 +150,8 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final downloadedEpisodes = _downloadService.downloadedEpisodes.values.toList()
+    final downloadedEpisodes = _downloadService.downloadedEpisodes.values
+        .toList()
       ..sort((a, b) => b.downloadedAt.compareTo(a.downloadedAt));
 
     return Scaffold(

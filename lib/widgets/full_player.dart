@@ -34,14 +34,12 @@ class _FullPlayerState extends State<FullPlayer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title =
-        widget.playerService.isLive
-            ? 'Bassdrive Live'
-            : (widget.playerService.currentEpisode?.displayName ?? 'Unknown');
-    final subtitle =
-        widget.playerService.isLive
-            ? '24/7 Drum \u0026 Bass Radio'
-            : (widget.playerService.currentEpisode?.show ?? '');
+    final title = widget.playerService.isLive
+        ? 'Bassdrive Live'
+        : (widget.playerService.currentEpisode?.displayName ?? 'Unknown');
+    final subtitle = widget.playerService.isLive
+        ? '24/7 Drum \u0026 Bass Radio'
+        : (widget.playerService.currentEpisode?.show ?? '');
 
     return GestureDetector(
       onVerticalDragUpdate: (details) {
@@ -126,11 +124,11 @@ class _FullPlayerState extends State<FullPlayer> {
                               widget.playerService.position.inMilliseconds
                                   .toDouble())
                           .clamp(
-                            0,
-                            widget.playerService.duration.inMilliseconds
-                                .toDouble()
-                                .clamp(1, double.infinity),
-                          ),
+                        0,
+                        widget.playerService.duration.inMilliseconds
+                            .toDouble()
+                            .clamp(1, double.infinity),
+                      ),
                       max: widget.playerService.duration.inMilliseconds
                           .toDouble()
                           .clamp(1, double.infinity),

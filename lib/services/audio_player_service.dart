@@ -171,18 +171,19 @@ class AudioPlayerService extends ChangeNotifier {
       notifyListeners();
 
       // Check if episode is downloaded locally
-      String audioUrl = episode.encodedUrl;
+      Uri audioUri = Uri.parse(episode.encodedUrl);
       final localPath = await _downloadService.getLocalPath(episode.id);
       if (localPath != null) {
         final file = File(localPath);
         if (await file.exists()) {
-          audioUrl = localPath;
+          // Use Uri.file() to properly handle Windows file paths
+          audioUri = Uri.file(localPath);
         }
       }
 
       await _player.setAudioSource(
         AudioSource.uri(
-          Uri.parse(audioUrl),
+          audioUri,
           tag: MediaItem(
             id: episode.id,
             title: episode.displayName,
