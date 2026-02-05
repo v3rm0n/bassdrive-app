@@ -25,12 +25,10 @@ class AppTheme {
         primary: primaryColor,
         secondary: secondaryColor,
         surface: surfaceColor,
-
         error: errorColor,
         onPrimary: Colors.black,
         onSecondary: Colors.white,
         onSurface: textPrimary,
-
         onError: Colors.white,
       ),
       cardTheme: CardThemeData(

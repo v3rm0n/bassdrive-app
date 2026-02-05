@@ -51,7 +51,8 @@ class DownloadedEpisode {
 
   String get formattedFileSize {
     if (fileSize < 1024) return '$fileSize B';
-    if (fileSize < 1024 * 1024) return '${(fileSize / 1024).toStringAsFixed(1)} KB';
+    if (fileSize < 1024 * 1024)
+      return '${(fileSize / 1024).toStringAsFixed(1)} KB';
     return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }
@@ -87,10 +88,13 @@ class DownloadService extends ChangeNotifier {
   final Map<String, DownloadProgress> _downloadProgress = {};
   final Map<String, DownloadedEpisode> _downloadedEpisodes = {};
 
-  Map<String, DownloadProgress> get downloadProgress => Map.unmodifiable(_downloadProgress);
-  Map<String, DownloadedEpisode> get downloadedEpisodes => Map.unmodifiable(_downloadedEpisodes);
+  Map<String, DownloadProgress> get downloadProgress =>
+      Map.unmodifiable(_downloadProgress);
+  Map<String, DownloadedEpisode> get downloadedEpisodes =>
+      Map.unmodifiable(_downloadedEpisodes);
 
-  int get totalDownloadedBytes => _downloadedEpisodes.values.fold(0, (sum, e) => sum + e.fileSize);
+  int get totalDownloadedBytes =>
+      _downloadedEpisodes.values.fold(0, (sum, e) => sum + e.fileSize);
   int get downloadedCount => _downloadedEpisodes.length;
 
   Future<void> initialize() async {
@@ -115,7 +119,8 @@ class DownloadService extends ChangeNotifier {
       try {
         final List<dynamic> jsonList = jsonDecode(jsonString);
         for (final item in jsonList) {
-          final episode = DownloadedEpisode.fromJson(item as Map<String, dynamic>);
+          final episode =
+              DownloadedEpisode.fromJson(item as Map<String, dynamic>);
           // Verify file still exists
           final file = File(episode.localPath);
           if (await file.exists()) {
@@ -183,7 +188,8 @@ class DownloadService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final fileName = '${episode.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.mp3';
+      final fileName =
+          '${episode.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.mp3';
       final localPath = '${_downloadsDir!.path}/$fileName';
 
       await _dio.download(
@@ -233,7 +239,8 @@ class DownloadService extends ChangeNotifier {
 
       // Clean up partial download
       try {
-        final fileName = '${episode.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.mp3';
+        final fileName =
+            '${episode.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.mp3';
         final localPath = '${_downloadsDir!.path}/$fileName';
         final file = File(localPath);
         if (await file.exists()) {
