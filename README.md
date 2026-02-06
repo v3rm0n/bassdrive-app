@@ -1,6 +1,6 @@
 # Bassdrive Radio App
 
-A cross-platform application for listening to Bassdrive Internet radio. Built with Flutter for iOS, Android, macOS, Windows, and Linux.
+A cross-platform application for listening to Bassdrive Internet radio and archived shows. Built with Flutter for iOS, Android, macOS, Windows, and Linux.
 
 [![Latest Release](https://img.shields.io/github/v/release/v3rm0n/bassdrive-app?label=latest%20release&style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/releases/latest)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/v3rm0n/bassdrive-app/release.yml?style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/actions)
@@ -29,8 +29,9 @@ A cross-platform application for listening to Bassdrive Internet radio. Built wi
 - **Favourites/Bookmarks**: Save your favourite episodes for quick access
 - **Filter & Sort**: Search and sort favourites by date, name, or show
 - **Listening Statistics**: Track total listening time for live stream and archives
+- **Offline Downloads**: Episodes auto-download when played, with local download management
 - **Background Playback**: Continue listening while using other apps
-- **Desktop Optimized**: Sidebar navigation and desktop-style player bar on macOS/Windows
+- **Adaptive Navigation**: Mobile bottom navigation and desktop sidebar layout
 
 ## Getting Started
 
@@ -95,7 +96,7 @@ The app is built using:
 - **audio_service**: Background audio handling
 - **dio**: HTTP client for API requests
 - **shared_preferences**: Local storage for listening progress, favourites, and statistics
-- **BLoC pattern**: State management
+- **Service-oriented + ChangeNotifier**: State management and app services
 
 ### Project Structure
 
@@ -112,8 +113,9 @@ lib/
 ## Data Source
 
 The app uses the Bassdrive JSON API:
-- Live Stream: `https://bassdrive.radioca.st/stream`
-- Archive API: `https://bd.maido.io/api.json`
+- API endpoint: `https://bd.maido.io/api.json`
+- Live stream URL is sourced from the API `live` field
+- Archive data is sourced from the API `archive` field
 
 ## Platform Support
 
@@ -124,9 +126,8 @@ The app uses the Bassdrive JSON API:
 
 ### Desktop (macOS, Windows & Linux)
 - Sidebar navigation (280px width)
-- Desktop player bar at bottom
-- Window-sized layout (1280x720 default)
-- Mouse-optimized interface
+- Content pane with player, archive, favourites, and downloads screens
+- Keyboard/mouse-optimized interface
 
 ## Permissions
 

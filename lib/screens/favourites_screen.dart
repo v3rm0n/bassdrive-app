@@ -290,7 +290,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<SortOption>(
-                              initialValue: _currentSort,
+                              value: _currentSort,
                               onChanged: (value) {
                                 if (value != null) {
                                   _onSortChanged(value);
@@ -333,7 +333,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String?>(
-                                initialValue: _selectedShowFilter,
+                                value: _selectedShowFilter,
                                 onChanged: _onShowFilterChanged,
                                 decoration: InputDecoration(
                                   labelText: 'Filter by show',
