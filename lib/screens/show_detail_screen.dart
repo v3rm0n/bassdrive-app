@@ -10,14 +10,13 @@ class ShowDetailScreen extends StatefulWidget {
   final Show show;
   final AudioPlayerService playerService;
   final StorageService storageService;
-  final VoidCallback? onOpenPlayer;
-
+  final VoidCallback? onPlayEpisode;
   const ShowDetailScreen({
     super.key,
     required this.show,
     required this.playerService,
     required this.storageService,
-    this.onOpenPlayer,
+    this.onPlayEpisode,
   });
 
   @override
@@ -51,11 +50,10 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
         widget.playerService.currentEpisode?.id == episode.id;
 
     if (isCurrentEpisode) {
-      // If already playing, pop back to home and open the full player
+      // If already playing, pop back - user can navigate to player tab
       if (context.mounted) {
         Navigator.pop(context);
       }
-      widget.onOpenPlayer?.call();
       return;
     }
 
@@ -76,8 +74,10 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
       ),
     );
 
-    // Don't navigate back - let the mini player appear at the bottom
-    // The mini player will be visible in the HomeScreen
+    // Navigate to player screen
+    if (mounted) {
+      widget.onPlayEpisode?.call();
+    }
   }
 
   @override

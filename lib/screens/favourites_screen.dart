@@ -19,14 +19,13 @@ class FavouritesScreen extends StatefulWidget {
   final Map<String, ArchiveDay> archive;
   final AudioPlayerService playerService;
   final StorageService storageService;
-  final VoidCallback? onOpenPlayer;
-
+  final VoidCallback? onPlayEpisode;
   const FavouritesScreen({
     super.key,
     required this.archive,
     required this.playerService,
     required this.storageService,
-    this.onOpenPlayer,
+    this.onPlayEpisode,
   });
 
   @override
@@ -161,8 +160,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
         widget.playerService.currentEpisode?.id == episode.id;
 
     if (isCurrentEpisode) {
-      // If already playing, open the full player
-      widget.onOpenPlayer?.call();
+      // If already playing, do nothing - user can navigate to player tab
       return;
     }
 
@@ -172,6 +170,9 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
       episode,
       startPosition: progress?.position,
     );
+
+    // Navigate to player screen
+    widget.onPlayEpisode?.call();
   }
 
   List<String> _getUniqueShows() {

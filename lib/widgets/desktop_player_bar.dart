@@ -17,7 +17,7 @@ class DesktopPlayerBar extends StatelessWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      height: 80 + bottomPadding,
+      height: 88 + bottomPadding,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
@@ -25,6 +25,13 @@ class DesktopPlayerBar extends StatelessWidget {
             color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Padding(
         padding: EdgeInsets.only(
@@ -78,8 +85,15 @@ class DesktopPlayerBar extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: 0.3),
+                theme.colorScheme.primary.withValues(alpha: 0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             playerService.isLive ? Icons.radio : Icons.music_note,
@@ -138,26 +152,28 @@ class DesktopPlayerBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Builder(
-                    builder: (context) => SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 4,
-                        thumbShape: const RoundSliderThumbShape(
-                          enabledThumbRadius: 6,
-                        ),
-                        overlayShape: const RoundSliderOverlayShape(
-                          overlayRadius: 12,
-                        ),
+                  child: SliderTheme(
+                    data: theme.sliderTheme.copyWith(
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 6,
                       ),
-                      child: Slider(
-                        value: playerService.position.inMilliseconds.toDouble(),
-                        max: playerService.duration.inMilliseconds.toDouble(),
-                        onChanged: (value) {
-                          playerService.seek(
-                            Duration(milliseconds: value.toInt()),
-                          );
-                        },
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 12,
                       ),
+                      activeTrackColor: theme.colorScheme.primary,
+                      inactiveTrackColor:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                      thumbColor: theme.colorScheme.primary,
+                    ),
+                    child: Slider(
+                      value: playerService.position.inMilliseconds.toDouble(),
+                      max: playerService.duration.inMilliseconds.toDouble(),
+                      onChanged: (value) {
+                        playerService.seek(
+                          Duration(milliseconds: value.toInt()),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -176,29 +192,40 @@ class DesktopPlayerBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (!playerService.isLive) ...[
-              IconButton(
-                icon: const Icon(Icons.skip_previous),
-                onPressed: null, // Could implement skip to previous
-                iconSize: 28,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              _buildControlButton(
+                icon: Icons.replay_10,
+                onPressed: () =>
+                    playerService.skipBackward(const Duration(seconds: 10)),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                size: 24,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 16),
             ],
+            // Play/Pause button
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
               child: isLoading
                   ? Center(
                       child: SizedBox(
-                        width: 24,
-                        height: 24,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: theme.colorScheme.onPrimary,
+                          valueColor: AlwaysStoppedAnimation(
+                            theme.colorScheme.onPrimary,
+                          ),
                         ),
                       ),
                     )
@@ -207,17 +234,18 @@ class DesktopPlayerBar extends StatelessWidget {
                         isPlaying ? Icons.pause : Icons.play_arrow,
                         color: theme.colorScheme.onPrimary,
                       ),
-                      iconSize: 28,
+                      iconSize: 24,
                       onPressed: () => playerService.togglePlayPause(),
                     ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 16),
             if (!playerService.isLive) ...[
-              IconButton(
-                icon: const Icon(Icons.skip_next),
-                onPressed: null, // Could implement skip to next
-                iconSize: 28,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              _buildControlButton(
+                icon: Icons.forward_30,
+                onPressed: () =>
+                    playerService.skipForward(const Duration(seconds: 30)),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                size: 24,
               ),
             ],
           ],
@@ -231,31 +259,50 @@ class DesktopPlayerBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         // Volume control (placeholder - would need volume plugin)
-        IconButton(
-          icon: const Icon(Icons.volume_up),
+        _buildControlButton(
+          icon: Icons.volume_up,
           onPressed: () {
             // Volume control could be implemented
           },
-          iconSize: 24,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          size: 22,
         ),
         const SizedBox(width: 8),
         // Full player button
-        IconButton(
-          icon: const Icon(Icons.open_in_full),
+        _buildControlButton(
+          icon: Icons.open_in_full,
           onPressed: onOpenFullPlayer,
-          iconSize: 24,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          size: 22,
         ),
         const SizedBox(width: 8),
         // Stop button
-        IconButton(
-          icon: const Icon(Icons.stop),
+        _buildControlButton(
+          icon: Icons.stop,
           onPressed: () => playerService.stop(),
-          iconSize: 24,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          size: 22,
         ),
       ],
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color color,
+    required double size,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, size: size, color: color),
+        ),
+      ),
     );
   }
 

@@ -6,12 +6,14 @@ class NavigationItem {
   final IconData? selectedIcon;
   final String label;
   final int index;
+  final bool isProminent;
 
   const NavigationItem({
     required this.icon,
     this.selectedIcon,
     required this.label,
     required this.index,
+    this.isProminent = false,
   });
 }
 
@@ -125,9 +127,9 @@ class _DesktopLayout extends StatelessWidget {
                           onTap: () => onDestinationSelected(destination.index),
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: destination.isProminent ? 20 : 16,
+                              vertical: destination.isProminent ? 18 : 14,
                             ),
                             child: Row(
                               children: [
@@ -137,21 +139,27 @@ class _DesktopLayout extends StatelessWidget {
                                       : destination.icon,
                                   color: isSelected
                                       ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.7),
-                                  size: 24,
+                                      : destination.isProminent
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.7),
+                                  size: destination.isProminent ? 28 : 24,
                                 ),
                                 const SizedBox(width: 16),
                                 Text(
                                   destination.label,
                                   style: theme.textTheme.bodyLarge?.copyWith(
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
+                                    fontWeight:
+                                        isSelected || destination.isProminent
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                    fontSize: destination.isProminent ? 18 : 16,
                                     color: isSelected
                                         ? theme.colorScheme.onPrimaryContainer
-                                        : theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.9),
+                                        : destination.isProminent
+                                            ? theme.colorScheme.primary
+                                            : theme.colorScheme.onSurface
+                                                .withValues(alpha: 0.9),
                                   ),
                                 ),
                               ],

@@ -10,14 +10,13 @@ class ArchiveScreen extends StatefulWidget {
   final Map<String, ArchiveDay> archive;
   final AudioPlayerService playerService;
   final StorageService storageService;
-  final VoidCallback? onOpenPlayer;
-
+  final VoidCallback? onPlayEpisode;
   const ArchiveScreen({
     super.key,
     required this.archive,
     required this.playerService,
     required this.storageService,
-    this.onOpenPlayer,
+    this.onPlayEpisode,
   });
 
   @override
@@ -175,7 +174,7 @@ class _ArchiveScreenState extends State<ArchiveScreen>
                                     show: show,
                                     playerService: widget.playerService,
                                     storageService: widget.storageService,
-                                    onOpenPlayer: widget.onOpenPlayer,
+                                    onPlayEpisode: widget.onPlayEpisode,
                                   ),
                                 ),
                               );
@@ -242,7 +241,7 @@ class _ArchiveScreenState extends State<ArchiveScreen>
                   show: show,
                   playerService: widget.playerService,
                   storageService: widget.storageService,
-                  onOpenPlayer: widget.onOpenPlayer,
+                  onPlayEpisode: widget.onPlayEpisode,
                 ),
               ),
             );

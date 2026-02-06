@@ -6,6 +6,7 @@ class AudioControls extends StatelessWidget {
   final bool showSkipButtons;
   final double iconSize;
   final Color? iconColor;
+  final VoidCallback? onPlayPressed;
 
   const AudioControls({
     super.key,
@@ -13,60 +14,117 @@ class AudioControls extends StatelessWidget {
     this.showSkipButtons = true,
     this.iconSize = 32,
     this.iconColor,
+    this.onPlayPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = iconColor ?? Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final color = iconColor ?? theme.colorScheme.primary;
+    final isPlaying = playerService.isPlaying;
+    final isLoading = playerService.isLoading;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // Skip backward 10s
         if (showSkipButtons && !playerService.isLive) ...[
-          IconButton(
-            icon: Icon(Icons.replay_10, size: iconSize * 0.9),
-            color: color,
+          _buildSkipButton(
+            context,
+            icon: Icons.replay_10,
             onPressed: () =>
                 playerService.skipBackward(const Duration(seconds: 10)),
+            color: color,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 24),
         ],
-        Container(
-          width: iconSize * 2,
-          height: iconSize * 2,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: playerService.isLoading
-                ? SizedBox(
-                    width: iconSize,
-                    height: iconSize,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(Colors.black),
-                    ),
-                  )
-                : IconButton(
-                    key: ValueKey(playerService.isPlaying),
-                    icon: Icon(
-                      playerService.isPlaying ? Icons.pause : Icons.play_arrow,
-                      size: iconSize,
-                      color: Colors.black,
-                    ),
-                    onPressed: playerService.togglePlayPause,
-                  ),
+        // Play/Pause button with animated container
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: iconSize * 2.2,
+          height: iconSize * 2.2,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: isPlaying ? 0.4 : 0.2),
+                blurRadius: isPlaying ? 20 : 10,
+                spreadRadius: isPlaying ? 2 : 0,
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: isLoading
+                  ? null
+                  : (onPlayPressed ?? playerService.togglePlayPause),
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: isLoading
+                      ? SizedBox(
+                          key: const ValueKey('loading'),
+                          width: iconSize * 0.8,
+                          height: iconSize * 0.8,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation(
+                              theme.colorScheme.onPrimary,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          isPlaying ? Icons.pause : Icons.play_arrow,
+                          key: ValueKey<bool>(isPlaying),
+                          size: iconSize * 1.2,
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                ),
+              ),
+            ),
           ),
         ),
+        // Skip forward 30s
         if (showSkipButtons && !playerService.isLive) ...[
-          const SizedBox(width: 16),
-          IconButton(
-            icon: Icon(Icons.forward_30, size: iconSize * 0.9),
-            color: color,
+          const SizedBox(width: 24),
+          _buildSkipButton(
+            context,
+            icon: Icons.forward_30,
             onPressed: () =>
                 playerService.skipForward(const Duration(seconds: 30)),
+            color: color,
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildSkipButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color color,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: Icon(
+            icon,
+            size: iconSize * 0.9,
+            color: color,
+          ),
+        ),
+      ),
     );
   }
 }

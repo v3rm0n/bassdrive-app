@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/episode.dart';
 import '../services/storage_service.dart';
 import '../services/download_service.dart';
@@ -22,6 +24,10 @@ class AudioPlayerService extends ChangeNotifier {
   bool _isLive = false;
   String? _error;
 
+  // Artwork cache for iOS lock screen
+  Uri? _artworkUri;
+  bool _artworkPrepared = false;
+
   // Listening time tracking
   DateTime? _playbackStartTime;
   Timer? _listeningTimeTimer;
@@ -29,6 +35,29 @@ class AudioPlayerService extends ChangeNotifier {
 
   AudioPlayerService() {
     _initializePlayer();
+    _prepareArtwork();
+  }
+
+  // Prepare artwork for iOS lock screen by copying asset to temp file
+  Future<void> _prepareArtwork() async {
+    if (_artworkPrepared) return;
+
+    try {
+      final byteData = await rootBundle.load('assets/icon/icon.png');
+      final bytes = byteData.buffer.asUint8List();
+
+      final tempDir = await getTemporaryDirectory();
+      final artworkFile = File('${tempDir.path}/bassdrive_artwork.png');
+
+      if (!await artworkFile.exists()) {
+        await artworkFile.writeAsBytes(bytes);
+      }
+
+      _artworkUri = Uri.file(artworkFile.path);
+      _artworkPrepared = true;
+    } catch (e) {
+      debugPrint('Failed to prepare artwork: $e');
+    }
   }
 
   void _initializePlayer() {
@@ -140,14 +169,17 @@ class AudioPlayerService extends ChangeNotifier {
 
       _liveStreamUrl = url;
 
+      // Ensure artwork is ready
+      await _prepareArtwork();
+
       await _player.setAudioSource(
         AudioSource.uri(
           Uri.parse(url),
-          tag: const MediaItem(
+          tag: MediaItem(
             id: 'live_stream',
             title: 'Bassdrive Live',
             artist: '24/7 Drum & Bass Radio',
-            artUri: null,
+            artUri: _artworkUri,
           ),
         ),
       );
@@ -181,17 +213,22 @@ class AudioPlayerService extends ChangeNotifier {
         }
       }
 
-      await _player.setAudioSource(
-        AudioSource.uri(
-          audioUri,
-          tag: MediaItem(
-            id: episode.id,
-            title: episode.displayName,
-            artist: episode.show,
-            artUri: null,
-          ),
+      // Ensure artwork is ready
+      await _prepareArtwork();
+
+      // Create audio source with MediaItem (duration will be updated when known)
+      final audioSource = AudioSource.uri(
+        audioUri,
+        tag: MediaItem(
+          id: episode.id,
+          title: episode.displayName,
+          artist: episode.show,
+          artUri: _artworkUri,
+          duration: Duration.zero, // Will be updated via durationStream
         ),
       );
+
+      await _player.setAudioSource(audioSource);
 
       if (startPosition != null && startPosition > Duration.zero) {
         await _player.seek(startPosition);
@@ -199,8 +236,11 @@ class AudioPlayerService extends ChangeNotifier {
 
       await _player.play();
 
-      // Automatically download episode for offline listening
-      _downloadService.downloadEpisode(episode);
+      // Cancel any ongoing auto-downloads from previous episodes
+      _downloadService.cancelAutoDownloads();
+
+      // Automatically download episode for offline listening (as auto type)
+      _downloadService.downloadEpisode(episode, type: DownloadType.auto);
     } catch (e) {
       _error = 'Failed to play episode: $e';
       _state = PlayerState.error;

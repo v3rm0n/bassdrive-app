@@ -24,65 +24,112 @@ class MiniPlayer extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 64,
+        height: 72,
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          border: Border(top: BorderSide(color: theme.dividerColor)),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 16),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                playerService.isLive ? Icons.radio : Icons.music_note,
-                color: theme.colorScheme.primary,
-              ),
+          border: Border(
+            top: BorderSide(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              // Album art thumbnail
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary.withValues(alpha: 0.3),
+                      theme.colorScheme.primary.withValues(alpha: 0.1),
+                    ],
                   ),
-                  if (subtitle.isNotEmpty)
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  playerService.isLive ? Icons.radio : Icons.music_note,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Track info
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall,
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                ],
-              ),
-            ),
-            if (playerService.isLoading)
-              const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              IconButton(
-                icon: Icon(
-                  playerService.isPlaying ? Icons.pause : Icons.play_arrow,
+                    if (subtitle.isNotEmpty)
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
                 ),
-                onPressed: playerService.togglePlayPause,
               ),
-            const SizedBox(width: 8),
-          ],
+              // Play/Pause button
+              if (playerService.isLoading)
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor:
+                        AlwaysStoppedAnimation(theme.colorScheme.primary),
+                  ),
+                )
+              else
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: playerService.togglePlayPause,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        playerService.isPlaying
+                            ? Icons.pause
+                            : Icons.play_arrow,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              // Chevron up to indicate expandable
+              Icon(
+                Icons.keyboard_arrow_up,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

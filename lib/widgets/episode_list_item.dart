@@ -6,6 +6,9 @@ import '../services/download_service.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
 
+// Re-export DownloadType for convenience
+export '../services/download_service.dart' show DownloadType;
+
 class EpisodeListItem extends StatefulWidget {
   final Episode episode;
   final Show? show;
@@ -91,7 +94,8 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   }
 
   Future<void> _downloadEpisode() async {
-    await _downloadService.downloadEpisode(widget.episode);
+    await _downloadService.downloadEpisode(widget.episode,
+        type: DownloadType.manual);
   }
 
   Widget _buildDownloadButton(ThemeData theme) {
@@ -319,23 +323,6 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                     : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 onPressed: _toggleFavourite,
               ),
-              if (isCurrentEpisode)
-                IconButton(
-                  icon: Icon(
-                    widget.playerService.isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
-                  ),
-                  iconSize: 32,
-                  color: theme.colorScheme.primary,
-                  onPressed: () {
-                    if (widget.playerService.isPlaying) {
-                      widget.playerService.pause();
-                    } else {
-                      widget.playerService.play();
-                    }
-                  },
-                ),
             ],
           ),
       onTap: widget.onTap,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -62,17 +63,21 @@ class DownloadedEpisode {
 
 enum DownloadStatus { notDownloaded, downloading, downloaded, error }
 
+enum DownloadType { manual, auto }
+
 class DownloadProgress {
   final String episodeId;
   final DownloadStatus status;
   final double progress; // 0.0 to 1.0
   final String? error;
+  final DownloadType type;
 
   DownloadProgress({
     required this.episodeId,
     required this.status,
     this.progress = 0.0,
     this.error,
+    this.type = DownloadType.manual,
   });
 }
 
@@ -90,6 +95,7 @@ class DownloadService extends ChangeNotifier {
 
   final Map<String, DownloadProgress> _downloadProgress = {};
   final Map<String, DownloadedEpisode> _downloadedEpisodes = {};
+  final Map<String, CancelToken> _cancelTokens = {};
 
   Map<String, DownloadProgress> get downloadProgress =>
       Map.unmodifiable(_downloadProgress);
@@ -163,7 +169,8 @@ class DownloadService extends ChangeNotifier {
     return null;
   }
 
-  Future<void> downloadEpisode(Episode episode) async {
+  Future<void> downloadEpisode(Episode episode,
+      {DownloadType type = DownloadType.manual}) async {
     if (_downloadedEpisodes.containsKey(episode.id)) {
       return; // Already downloaded
     }
@@ -178,15 +185,21 @@ class DownloadService extends ChangeNotifier {
         episodeId: episode.id,
         status: DownloadStatus.error,
         error: 'Storage limit reached. Please delete some episodes.',
+        type: type,
       );
       notifyListeners();
       return;
     }
 
+    // Create cancel token for this download
+    final cancelToken = CancelToken();
+    _cancelTokens[episode.id] = cancelToken;
+
     _downloadProgress[episode.id] = DownloadProgress(
       episodeId: episode.id,
       status: DownloadStatus.downloading,
       progress: 0.0,
+      type: type,
     );
     notifyListeners();
 
@@ -198,12 +211,14 @@ class DownloadService extends ChangeNotifier {
       await _dio.download(
         episode.encodedUrl,
         localPath,
+        cancelToken: cancelToken,
         onReceiveProgress: (received, total) {
           if (total > 0) {
             _downloadProgress[episode.id] = DownloadProgress(
               episodeId: episode.id,
               status: DownloadStatus.downloading,
               progress: received / total,
+              type: type,
             );
             notifyListeners();
           }
@@ -228,15 +243,24 @@ class DownloadService extends ChangeNotifier {
         episodeId: episode.id,
         status: DownloadStatus.downloaded,
         progress: 1.0,
+        type: type,
       );
 
       await _saveDownloadedEpisodes();
       notifyListeners();
     } catch (e) {
+      if (e is DioException && CancelToken.isCancel(e)) {
+        // Download was cancelled, don't show error
+        _downloadProgress.remove(episode.id);
+        notifyListeners();
+        return;
+      }
+
       _downloadProgress[episode.id] = DownloadProgress(
         episodeId: episode.id,
         status: DownloadStatus.error,
         error: e.toString(),
+        type: type,
       );
       notifyListeners();
 
@@ -250,10 +274,35 @@ class DownloadService extends ChangeNotifier {
           await file.delete();
         }
       } catch (_) {}
+    } finally {
+      _cancelTokens.remove(episode.id);
+    }
+  }
+
+  /// Cancel auto-downloads when a new episode starts playing
+  void cancelAutoDownloads() {
+    final autoDownloadsToCancel = _downloadProgress.entries
+        .where((entry) =>
+            entry.value.status == DownloadStatus.downloading &&
+            entry.value.type == DownloadType.auto)
+        .map((entry) => entry.key)
+        .toList();
+
+    for (final episodeId in autoDownloadsToCancel) {
+      final cancelToken = _cancelTokens[episodeId];
+      if (cancelToken != null && !cancelToken.isCancelled) {
+        cancelToken.cancel('New episode started playing');
+      }
     }
   }
 
   Future<void> deleteDownload(String episodeId) async {
+    // Cancel any ongoing download first
+    final cancelToken = _cancelTokens[episodeId];
+    if (cancelToken != null && !cancelToken.isCancelled) {
+      cancelToken.cancel('Download deleted by user');
+    }
+
     final episode = _downloadedEpisodes[episodeId];
     if (episode != null) {
       try {
@@ -273,6 +322,14 @@ class DownloadService extends ChangeNotifier {
   }
 
   Future<void> deleteAllDownloads() async {
+    // Cancel all ongoing downloads
+    for (final entry in _cancelTokens.entries) {
+      if (!entry.value.isCancelled) {
+        entry.value.cancel('All downloads deleted');
+      }
+    }
+    _cancelTokens.clear();
+
     for (final episode in _downloadedEpisodes.values) {
       try {
         final file = File(episode.localPath);

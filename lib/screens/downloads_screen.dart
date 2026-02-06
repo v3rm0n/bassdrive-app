@@ -9,13 +9,12 @@ import '../widgets/episode_list_item.dart';
 class DownloadsScreen extends StatefulWidget {
   final AudioPlayerService playerService;
   final StorageService storageService;
-  final VoidCallback onOpenPlayer;
-
+  final VoidCallback? onPlayEpisode;
   const DownloadsScreen({
     super.key,
     required this.playerService,
     required this.storageService,
-    required this.onOpenPlayer,
+    this.onPlayEpisode,
   });
 
   @override
@@ -49,8 +48,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         widget.playerService.currentEpisode?.id == episode.id;
 
     if (isCurrentEpisode) {
-      // If already playing, open the full player
-      widget.onOpenPlayer();
+      // If already playing, do nothing - user can navigate to player tab
       return;
     }
 
@@ -70,6 +68,9 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         lastPlayed: DateTime.now(),
       ),
     );
+
+    // Navigate to player screen
+    widget.onPlayEpisode?.call();
   }
 
   Future<void> _deleteAllDownloads() async {

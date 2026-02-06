@@ -9,13 +9,10 @@ import 'services/storage_service.dart';
 import 'utils/platform_utils.dart';
 import 'utils/theme.dart';
 import 'widgets/adaptive_navigation.dart';
-import 'widgets/desktop_player_bar.dart';
 import 'widgets/full_player.dart';
-import 'widgets/mini_player.dart';
 import 'screens/archive_screen.dart';
 import 'screens/downloads_screen.dart';
 import 'screens/favourites_screen.dart';
-import 'screens/listening_stats_screen.dart';
 import 'screens/live_stream_screen.dart';
 
 void main() async {
@@ -63,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
   ApiResponse? _apiResponse;
   bool _isLoading = true;
   String? _error;
-  bool _showFullPlayer = false;
 
   @override
   void initState() {
@@ -202,6 +198,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _navigateToPlayer() {
+    setState(() {
+      _currentIndex = 2; // Player is at index 2
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -265,33 +267,24 @@ class _HomeScreenState extends State<HomeScreen> {
         archive: _apiResponse!.archive,
         playerService: _playerService,
         storageService: _storageService,
-        onOpenPlayer: () {
-          setState(() {
-            _showFullPlayer = true;
-          });
-        },
+        onPlayEpisode: _navigateToPlayer,
+      ),
+      // Player is now the main/central screen
+      FullPlayer(
+        playerService: _playerService,
+        storageService: _storageService,
+        liveStreamUrl: _apiResponse!.live,
       ),
       FavouritesScreen(
         archive: _apiResponse!.archive,
         playerService: _playerService,
         storageService: _storageService,
-        onOpenPlayer: () {
-          setState(() {
-            _showFullPlayer = true;
-          });
-        },
+        onPlayEpisode: _navigateToPlayer,
       ),
       DownloadsScreen(
         playerService: _playerService,
         storageService: _storageService,
-        onOpenPlayer: () {
-          setState(() {
-            _showFullPlayer = true;
-          });
-        },
-      ),
-      ListeningStatsScreen(
-        storageService: _storageService,
+        onPlayEpisode: _navigateToPlayer,
       ),
     ];
 
@@ -309,21 +302,22 @@ class _HomeScreenState extends State<HomeScreen> {
         index: 1,
       ),
       NavigationItem(
+        icon: Icons.play_circle_outline,
+        selectedIcon: Icons.play_circle_filled,
+        label: 'Player',
+        index: 2,
+        isProminent: true,
+      ),
+      NavigationItem(
         icon: Icons.favorite_outline,
         selectedIcon: Icons.favorite,
         label: 'Favourites',
-        index: 2,
+        index: 3,
       ),
       NavigationItem(
         icon: Icons.download_outlined,
         selectedIcon: Icons.download,
         label: 'Downloads',
-        index: 3,
-      ),
-      NavigationItem(
-        icon: Icons.bar_chart_outlined,
-        selectedIcon: Icons.bar_chart,
-        label: 'Stats',
         index: 4,
       ),
     ];
@@ -336,68 +330,36 @@ class _HomeScreenState extends State<HomeScreen> {
           onDestinationSelected: (index) {
             setState(() {
               _currentIndex = index;
-              _showFullPlayer = false;
             });
           },
           destinations: destinations,
-          content: Column(
-            children: [
-              Expanded(child: screens[_currentIndex]),
-              if (_playerService.currentEpisode != null ||
-                  _playerService.isLive)
-                DesktopPlayerBar(
-                  playerService: _playerService,
-                  onOpenFullPlayer: () {
-                    setState(() {
-                      _showFullPlayer = true;
-                    });
-                  },
-                ),
-            ],
-          ),
+          content: screens[_currentIndex],
         ),
-        bottomSheet: _showFullPlayer
-            ? FullPlayer(
-                playerService: _playerService,
-                onClose: () {
-                  setState(() {
-                    _showFullPlayer = false;
-                  });
-                },
-              )
-            : null,
       );
     }
 
     // Mobile layout
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(child: screens[_currentIndex]),
-          if (_playerService.currentEpisode != null || _playerService.isLive)
-            MiniPlayer(
-              playerService: _playerService,
-              onTap: () {
-                setState(() {
-                  _showFullPlayer = true;
-                });
-              },
-            ),
-        ],
-      ),
+      body: screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
-            _showFullPlayer = false;
           });
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.radio), label: 'Live'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.radio),
+            label: 'Live',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_music),
             label: 'Archive',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.play_circle),
+            label: 'Player',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
@@ -407,22 +369,8 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.download),
             label: 'Downloads',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Stats',
-          ),
         ],
       ),
-      bottomSheet: _showFullPlayer
-          ? FullPlayer(
-              playerService: _playerService,
-              onClose: () {
-                setState(() {
-                  _showFullPlayer = false;
-                });
-              },
-            )
-          : null,
     );
   }
 }
