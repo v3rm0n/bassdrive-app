@@ -22,10 +22,11 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Keep desktop and mobile sizing behavior in shared primitives to avoid divergent layouts
   - Completion note (Loop 00001): Added reusable primitives under `lib/ui/player/` (`player_hero_cover.dart`, `live_badge.dart`, `track_meta_block.dart`, `timeline_progress_row.dart`, `transport_cluster.dart`) plus shared `PlayerViewState.fromService(...)` and `PlayerLayoutScale.fromWidth(...)` so UI reads current `AudioPlayerService` state without embedding playback logic while preserving mobile/desktop sizing from one source of truth; added widget tests in `test/ui/player/player_primitives_test.dart`.
 
-- [ ] Rebuild `FullPlayer` into a polished, working prototype using the new primitives:
+- [x] Rebuild `FullPlayer` into a polished, working prototype using the new primitives:
   - Replace generic gradient/card treatment with the new broadcast-console composition (hero, metadata, timeline, controls, ambient motion)
   - Preserve all existing behavior: play/pause toggle, start-live when idle, archive seek slider, stats screen access
   - Add subtle purposeful animations (entry reveal + play-state pulse) with safe performance defaults
+  - Completion note (Loop 00001): Rebuilt `lib/widgets/full_player.dart` around the shared `lib/ui/player/` primitives with a new broadcast-console composition (ambient background, hero, metadata block, timeline row, transport cluster), preserved all existing playback interactions (idle -> live start, play/pause toggle, archive seek + skip, stats screen access), and added lightweight entry reveal + play-state pulse animations; added widget coverage in `test/widgets/full_player_test.dart` for idle live-start and archive timeline/control rendering.
 
 - [ ] Integrate prototype-level app chrome consistency around the Player:
   - Refine navigation prominence for Player tab/rail item and active-state styling through shared tokens

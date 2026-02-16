@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+
+import '../screens/listening_stats_screen.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
-import 'audio_controls.dart';
-import '../screens/listening_stats_screen.dart';
+import '../ui/player/player_primitives.dart';
+import '../ui/theme/app_theme_tokens.dart';
+import '../ui/theme/component_theme_extensions.dart';
 
 class FullPlayer extends StatefulWidget {
   final AudioPlayerService playerService;
@@ -20,40 +23,50 @@ class FullPlayer extends StatefulWidget {
   State<FullPlayer> createState() => _FullPlayerState();
 }
 
-class _FullPlayerState extends State<FullPlayer>
-    with SingleTickerProviderStateMixin {
-  double? _dragValue;
+class _FullPlayerState extends State<FullPlayer> with TickerProviderStateMixin {
+  late AnimationController _entryController;
+  late Animation<double> _entryOpacity;
+  late Animation<double> _entryLift;
+
   late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+  late Animation<double> _pulseScale;
+  bool _pulseActive = false;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+
+    _entryController = AnimationController(
+      duration: AppMotion.emphasis,
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    _entryOpacity = CurvedAnimation(
+      parent: _entryController,
+      curve: const Interval(0.0, 0.9, curve: AppMotion.entranceCurve),
     );
+    _entryLift = Tween<double>(begin: 24, end: 0).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.1, 1.0, curve: AppMotion.entranceCurve),
+      ),
+    );
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    );
+    _pulseScale = Tween<double>(begin: 1.0, end: 1.03).animate(
+      CurvedAnimation(parent: _pulseController, curve: AppMotion.pulseCurve),
+    );
+
+    _entryController.forward();
   }
 
   @override
   void dispose() {
+    _entryController.dispose();
     _pulseController.dispose();
     super.dispose();
-  }
-
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes % 60;
-    final seconds = duration.inSeconds % 60;
-
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    } else {
-      return '$minutes:${seconds.toString().padLeft(2, '0')}';
-    }
   }
 
   void _showStats() {
@@ -79,350 +92,256 @@ class _FullPlayerState extends State<FullPlayer>
     }
   }
 
+  void _syncPulse(bool isPlaying) {
+    if (isPlaying && !_pulseActive) {
+      _pulseController.repeat(reverse: true);
+      _pulseActive = true;
+      return;
+    }
+
+    if (!isPlaying && _pulseActive) {
+      _pulseController.stop();
+      _pulseController.value = 0;
+      _pulseActive = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cardTheme =
+        theme.extension<BroadcastCardTheme>() ?? BroadcastCardTheme.console();
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final scale = PlayerLayoutScale.fromWidth(viewportWidth);
+    final viewState = PlayerViewState.fromService(widget.playerService);
 
-    // Determine what to show based on player state
-    final bool isPlaying = widget.playerService.isPlaying;
-    final bool hasContent = widget.playerService.isLive ||
-        widget.playerService.currentEpisode != null;
+    _syncPulse(viewState.isPlaying);
 
-    // When nothing is playing, show the "ready to play" state like live stream
-    final String title = hasContent
-        ? (widget.playerService.isLive
-            ? 'Bassdrive Live'
-            : (widget.playerService.currentEpisode?.displayName ?? 'Bassdrive'))
-        : 'Bassdrive';
-
-    final String subtitle = hasContent
-        ? (widget.playerService.isLive
-            ? '24/7 Drum & Bass Radio'
-            : (widget.playerService.currentEpisode?.show ?? 'Ready to Play'))
-        : 'Ready to Play';
-
-    // Start/stop pulse animation based on playing state
-    if (isPlaying) {
-      _pulseController.repeat(reverse: true);
-    } else {
-      _pulseController.stop();
-      _pulseController.reset();
-    }
+    final isReadyState = !viewState.hasContent;
+    final showLiveBadge = viewState.isLive || isReadyState;
+    final heroIcon = showLiveBadge ? Icons.radio : Icons.music_note;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              theme.colorScheme.surface,
-              theme.scaffoldBackgroundColor,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header with stats button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.bar_chart),
-                      onPressed: _showStats,
-                      tooltip: 'Listening Stats',
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ],
+      body: Stack(
+        children: [
+          _AmbientBackdrop(isPlaying: viewState.isPlaying),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.bar_chart),
+                        onPressed: _showStats,
+                        tooltip: 'Listening Stats',
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.78),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              // Main content
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Album art with pulse animation
-                              AnimatedBuilder(
-                                animation: _pulseAnimation,
-                                builder: (context, child) {
-                                  return Transform.scale(
-                                    scale:
-                                        isPlaying ? _pulseAnimation.value : 1.0,
-                                    child: Container(
-                                      width: 260,
-                                      height: 260,
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: scale.horizontalPadding,
+                              vertical: AppSpacing.sm,
+                            ),
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: scale.maxContentWidth,
+                                ),
+                                child: FadeTransition(
+                                  opacity: _entryOpacity,
+                                  child: AnimatedBuilder(
+                                    animation: _entryLift,
+                                    child: DecoratedBox(
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(24),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: theme.colorScheme.primary
-                                                .withValues(
-                                              alpha: isPlaying ? 0.4 : 0.15,
-                                            ),
-                                            blurRadius: isPlaying ? 40 : 20,
-                                            spreadRadius: isPlaying ? 8 : 4,
-                                          ),
-                                        ],
+                                        color: cardTheme.background.withValues(
+                                          alpha: 0.82,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                            cardTheme.radius),
+                                        border:
+                                            Border.all(color: cardTheme.border),
                                       ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(24),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: [
-                                                theme.colorScheme.primary
-                                                    .withValues(alpha: 0.4),
-                                                theme.colorScheme.primary
-                                                    .withValues(alpha: 0.1),
-                                              ],
+                                      child: Padding(
+                                        padding: cardTheme.padding,
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            ScaleTransition(
+                                              scale: _pulseScale,
+                                              child: PlayerHeroCover(
+                                                scale: scale,
+                                                icon: heroIcon,
+                                                isPlaying: viewState.isPlaying,
+                                                badge: showLiveBadge
+                                                    ? LiveBadge(
+                                                        isPlaying:
+                                                            viewState.isPlaying,
+                                                        isReadyState:
+                                                            isReadyState,
+                                                      )
+                                                    : null,
+                                              ),
                                             ),
-                                          ),
-                                          child: Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              // Background pattern
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  gradient: RadialGradient(
-                                                    center: Alignment.center,
-                                                    radius: 0.8,
-                                                    colors: [
-                                                      theme.colorScheme.primary
-                                                          .withValues(
-                                                              alpha: 0.3),
-                                                      Colors.transparent,
-                                                    ],
-                                                  ),
-                                                ),
+                                            SizedBox(
+                                                height: scale.sectionSpacing),
+                                            TrackMetaBlock(
+                                              title: viewState.title,
+                                              subtitle: viewState.subtitle,
+                                              scale: scale,
+                                            ),
+                                            SizedBox(
+                                                height: scale.sectionSpacing),
+                                            TimelineProgressRow(
+                                              viewState: viewState,
+                                              scale: scale,
+                                              onSeek: widget.playerService.seek,
+                                            ),
+                                            if (!viewState.showTimeline)
+                                              SizedBox(
+                                                height:
+                                                    scale.timelineBottomSpacing,
                                               ),
-                                              // Icon
-                                              Icon(
-                                                widget.playerService.isLive ||
-                                                        !hasContent
-                                                    ? Icons.radio
-                                                    : Icons.music_note,
-                                                size: 100,
-                                                color:
-                                                    theme.colorScheme.primary,
-                                              ),
-                                              // Live/Ready indicator
-                                              if (widget.playerService.isLive ||
-                                                  !hasContent)
-                                                Positioned(
-                                                  top: 20,
-                                                  right: 20,
-                                                  child: Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 5,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      color: isPlaying
-                                                          ? Colors.red
-                                                          : theme.colorScheme
-                                                              .primary,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              16),
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Container(
-                                                          width: 8,
-                                                          height: 8,
-                                                          decoration:
-                                                              const BoxDecoration(
-                                                            color: Colors.white,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 6),
-                                                        Text(
-                                                          isPlaying
-                                                              ? 'LIVE'
-                                                              : 'READY',
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
+                                            TransportCluster(
+                                              viewState: viewState,
+                                              scale: scale,
+                                              onPrimaryPressed:
+                                                  _handlePlayButton,
+                                              onSkipBack: viewState.showTimeline
+                                                  ? () {
+                                                      widget.playerService
+                                                          .skipBackward(
+                                                        const Duration(
+                                                            seconds: 10),
+                                                      );
+                                                    }
+                                                  : null,
+                                              onSkipForward:
+                                                  viewState.showTimeline
+                                                      ? () {
+                                                          widget.playerService
+                                                              .skipForward(
+                                                            const Duration(
+                                                                seconds: 30),
+                                                          );
+                                                        }
+                                                      : null,
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 40),
-                              // Title and subtitle
-                              Text(
-                                title,
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 26,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                subtitle,
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 40),
-                              // Progress bar for archives (only when playing archive)
-                              if (!widget.playerService.isLive &&
-                                  hasContent) ...[
-                                SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
-                                    trackHeight: 6,
-                                    thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 8,
-                                      pressedElevation: 8,
-                                    ),
-                                    overlayShape: const RoundSliderOverlayShape(
-                                      overlayRadius: 16,
-                                    ),
-                                    activeTrackColor: theme.colorScheme.primary,
-                                    inactiveTrackColor: theme
-                                        .colorScheme.onSurface
-                                        .withValues(alpha: 0.1),
-                                    thumbColor: theme.colorScheme.primary,
-                                    overlayColor: theme.colorScheme.primary
-                                        .withValues(alpha: 0.2),
-                                  ),
-                                  child: Slider(
-                                    value: (_dragValue ??
-                                            widget.playerService.position
-                                                .inMilliseconds
-                                                .toDouble())
-                                        .clamp(
-                                      0,
-                                      widget
-                                          .playerService.duration.inMilliseconds
-                                          .toDouble()
-                                          .clamp(1, double.infinity),
-                                    ),
-                                    max: widget
-                                        .playerService.duration.inMilliseconds
-                                        .toDouble()
-                                        .clamp(1, double.infinity),
-                                    onChangeStart: (value) {
-                                      setState(() {
-                                        _dragValue = value;
-                                      });
-                                    },
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _dragValue = value;
-                                      });
-                                    },
-                                    onChangeEnd: (value) {
-                                      widget.playerService.seek(
-                                        Duration(milliseconds: value.toInt()),
+                                    builder: (context, child) {
+                                      return Transform.translate(
+                                        offset: Offset(0, _entryLift.value),
+                                        child: child,
                                       );
-                                      setState(() {
-                                        _dragValue = null;
-                                      });
                                     },
                                   ),
                                 ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 8),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        _formatDuration(
-                                          _dragValue != null
-                                              ? Duration(
-                                                  milliseconds:
-                                                      _dragValue!.toInt(),
-                                                )
-                                              : widget.playerService.position,
-                                        ),
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.6),
-                                        ),
-                                      ),
-                                      Text(
-                                        _formatDuration(
-                                            widget.playerService.duration),
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.6),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                              ] else ...[
-                                // Spacer for live stream or idle state
-                                const SizedBox(height: 24),
-                              ],
-                              // Playback controls
-                              AudioControls(
-                                playerService: widget.playerService,
-                                iconSize: 40,
-                                showSkipButtons:
-                                    !widget.playerService.isLive && hasContent,
-                                onPlayPressed: _handlePlayButton,
                               ),
-                              const SizedBox(height: 24),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AmbientBackdrop extends StatelessWidget {
+  const _AmbientBackdrop({required this.isPlaying});
+
+  final bool isPlaying;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.surface,
+                  AppColors.background,
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        Positioned.fill(
+          child: AnimatedAlign(
+            duration: AppMotion.emphasis,
+            curve: AppMotion.entranceCurve,
+            alignment: isPlaying
+                ? const Alignment(-0.75, -0.7)
+                : const Alignment(-0.5, -0.4),
+            child: IgnorePointer(
+              child: AnimatedContainer(
+                duration: AppMotion.emphasis,
+                width: isPlaying ? 320 : 260,
+                height: isPlaying ? 320 : 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.cyanGlow.withValues(
+                    alpha: isPlaying ? 0.18 : 0.08,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: AnimatedAlign(
+            duration: AppMotion.emphasis,
+            curve: AppMotion.entranceCurve,
+            alignment: isPlaying
+                ? const Alignment(0.82, 0.78)
+                : const Alignment(0.7, 0.62),
+            child: IgnorePointer(
+              child: AnimatedContainer(
+                duration: AppMotion.emphasis,
+                width: isPlaying ? 240 : 180,
+                height: isPlaying ? 240 : 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.outlineStrong.withValues(
+                    alpha: isPlaying ? 0.16 : 0.1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
