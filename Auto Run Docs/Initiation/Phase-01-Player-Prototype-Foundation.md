@@ -40,9 +40,10 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Link both docs using wiki-links (`[[player-ui-foundation]]`, `[[adr-001-player-visual-direction]]`)
   - Completion note (Loop 00001): Added `docs/architecture/player-ui-foundation.md` and `docs/decisions/adr-001-player-visual-direction.md` with required YAML front matter metadata, documented the broadcast-console foundation and decision tradeoffs, and cross-linked both artifacts with `[[player-ui-foundation]]` and `[[adr-001-player-visual-direction]]`.
 
-- [ ] Write focused UI tests for the new Player prototype (separate from execution):
+- [x] Write focused UI tests for the new Player prototype (separate from execution):
   - Add/extend widget tests to cover idle -> live start behavior, archive progress visibility, and key controls render states
   - Keep tests deterministic by mocking service state transitions instead of relying on network/audio backends
+  - Completion note (Loop 00001): Extended `test/widgets/full_player_test.dart` with deterministic service-backed widget coverage for archive progress labels (`12:00`/`58:00`), primary transport control state rendering (loading spinner, play icon, pause icon), and loaded-content play toggle behavior that asserts `togglePlayPause()` is used instead of live-start; all coverage relies on mocked `AudioPlayerService` state transitions only (no network/audio backend).
 
 - [ ] Run verification and fix failures until green:
   - Run `flutter analyze`

@@ -34,6 +34,35 @@ void main() {
     expect(playerService.lastLiveUrl, 'https://example.com/live');
   });
 
+  testWidgets('FullPlayer shows archive progress labels', (tester) async {
+    final playerService = _FakeAudioPlayerService(
+      currentEpisode: Episode(
+        name: '[2026.02.10] Late Night Session',
+        show: 'Bassdrive Archive',
+        url: 'https://example.com/original',
+        encodedUrl: 'https://example.com/encoded',
+      ),
+      position: const Duration(minutes: 12),
+      duration: const Duration(minutes: 58),
+      state: PlayerState.paused,
+      isLive: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: FullPlayer(
+          playerService: playerService,
+          storageService: StorageService(),
+          liveStreamUrl: 'https://example.com/live',
+        ),
+      ),
+    );
+
+    expect(find.text('12:00'), findsOneWidget);
+    expect(find.text('58:00'), findsOneWidget);
+  });
+
   testWidgets('FullPlayer renders archive timeline and skip controls', (
     tester,
   ) async {
@@ -65,6 +94,70 @@ void main() {
     expect(find.byIcon(Icons.replay_10), findsOneWidget);
     expect(find.byIcon(Icons.forward_30), findsOneWidget);
   });
+
+  testWidgets('FullPlayer primary control reflects loading and play states', (
+    tester,
+  ) async {
+    final playerService = _FakeAudioPlayerService(
+      state: PlayerState.loading,
+      isLive: true,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: FullPlayer(
+          playerService: playerService,
+          storageService: StorageService(),
+          liveStreamUrl: 'https://example.com/live',
+        ),
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow), findsNothing);
+    expect(find.byIcon(Icons.pause), findsNothing);
+
+    playerService.setState(PlayerState.paused);
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+
+    playerService.setState(PlayerState.playing);
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.pause), findsOneWidget);
+  });
+
+  testWidgets('FullPlayer toggles playback for loaded archive content', (
+    tester,
+  ) async {
+    final playerService = _FakeAudioPlayerService(
+      currentEpisode: Episode(
+        name: '[2026.02.10] Late Night Session',
+        show: 'Bassdrive Archive',
+        url: 'https://example.com/original',
+        encodedUrl: 'https://example.com/encoded',
+      ),
+      state: PlayerState.paused,
+      isLive: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: FullPlayer(
+          playerService: playerService,
+          storageService: StorageService(),
+          liveStreamUrl: 'https://example.com/live',
+        ),
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+
+    expect(playerService.togglePlayPauseCalls, 1);
+    expect(playerService.playLiveCalls, 0);
+  });
 }
 
 class _FakeAudioPlayerService extends ChangeNotifier
@@ -89,6 +182,7 @@ class _FakeAudioPlayerService extends ChangeNotifier
   String? _error;
 
   int playLiveCalls = 0;
+  int togglePlayPauseCalls = 0;
   String? lastLiveUrl;
 
   @override
@@ -151,7 +245,13 @@ class _FakeAudioPlayerService extends ChangeNotifier
 
   @override
   Future<void> togglePlayPause() async {
+    togglePlayPauseCalls += 1;
     _state = isPlaying ? PlayerState.paused : PlayerState.playing;
+    notifyListeners();
+  }
+
+  void setState(PlayerState state) {
+    _state = state;
     notifyListeners();
   }
 
