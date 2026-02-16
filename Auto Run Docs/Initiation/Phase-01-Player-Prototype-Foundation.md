@@ -34,10 +34,11 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Verify no regression in desktop sidebar and mobile bottom navigation flows
   - Completion note (Loop 00001): Updated `lib/widgets/adaptive_navigation.dart` to apply tokenized broadcast-console chrome across desktop rail and mobile navigation, including stronger Player prominence and active-state styling via the new `NavigationChromeTheme`; updated `lib/main.dart` to route both desktop/mobile navigation through `AdaptiveNavigation` and replaced plain loading/error scaffolds with themed console status surfaces; added regression coverage in `test/widgets/app_chrome_test.dart` for loading/error chrome and adaptive navigation interaction.
 
-- [ ] Produce structured implementation artifacts alongside the code changes:
+- [x] Produce structured implementation artifacts alongside the code changes:
   - Create `docs/architecture/player-ui-foundation.md` with YAML front matter (`type: reference`, title, created date, tags)
   - Create `docs/decisions/adr-001-player-visual-direction.md` with YAML front matter (`type: analysis`) explaining chosen defaults and tradeoffs
   - Link both docs using wiki-links (`[[player-ui-foundation]]`, `[[adr-001-player-visual-direction]]`)
+  - Completion note (Loop 00001): Added `docs/architecture/player-ui-foundation.md` and `docs/decisions/adr-001-player-visual-direction.md` with required YAML front matter metadata, documented the broadcast-console foundation and decision tradeoffs, and cross-linked both artifacts with `[[player-ui-foundation]]` and `[[adr-001-player-visual-direction]]`.
 
 - [ ] Write focused UI tests for the new Player prototype (separate from execution):
   - Add/extend widget tests to cover idle -> live start behavior, archive progress visibility, and key controls render states
