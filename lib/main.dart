@@ -38,7 +38,9 @@ class BassdriveApp extends StatelessWidget {
     return MaterialApp(
       title: 'Bassdrive Radio',
       debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.dark,
       theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
       home: const HomeScreen(),
     );
   }

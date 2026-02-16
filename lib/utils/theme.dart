@@ -1,102 +1,101 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import '../ui/theme/app_theme_tokens.dart';
+import '../ui/theme/component_theme_extensions.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF00BCD4);
-  static const Color secondaryColor = Color(0xFF0097A7);
-  static const Color accentColor = Color(0xFF00E5FF);
-  static const Color backgroundColor = Color(0xFF121212);
-  static const Color surfaceColor = Color(0xFF1E1E1E);
-  static const Color cardColor = Color(0xFF252525);
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB0B0B0);
-  static const Color textMuted = Color(0xFF808080);
-  static const Color dividerColor = Color(0xFF2C2C2C);
-  static const Color errorColor = Color(0xFFCF6679);
-  static const Color successColor = Color(0xFF4CAF50);
+  static const Color primaryColor = AppColors.cyanStrong;
+  static const Color secondaryColor = AppColors.cyan;
+  static const Color accentColor = AppColors.cyan;
+  static const Color backgroundColor = AppColors.background;
+  static const Color surfaceColor = AppColors.surface;
+  static const Color cardColor = AppColors.surfaceRaised;
+  static const Color textPrimary = AppColors.textPrimary;
+  static const Color textSecondary = AppColors.textSecondary;
+  static const Color textMuted = AppColors.textMuted;
+  static const Color dividerColor = AppColors.outline;
+  static const Color errorColor = AppColors.error;
+  static const Color successColor = AppColors.success;
 
   static ThemeData get darkTheme {
+    const colorScheme = ColorScheme.dark(
+      primary: AppColors.cyanStrong,
+      secondary: AppColors.cyan,
+      surface: AppColors.surface,
+      error: AppColors.error,
+      onPrimary: Colors.black,
+      onSecondary: Colors.black,
+      onSurface: AppColors.textPrimary,
+      onError: Colors.black,
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: backgroundColor,
-      primaryColor: primaryColor,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: surfaceColor,
-        error: errorColor,
-        onPrimary: Colors.black,
-        onSecondary: Colors.white,
-        onSurface: textPrimary,
-        onError: Colors.white,
-      ),
-      cardTheme: CardThemeData(
-        color: cardColor,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+      scaffoldBackgroundColor: AppColors.background,
+      primaryColor: AppColors.cyanStrong,
+      colorScheme: colorScheme,
+      textTheme: AppTypography.textTheme(colorScheme),
       appBarTheme: AppBarTheme(
-        backgroundColor: surfaceColor,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
+        titleTextStyle: AppTypography.textTheme(colorScheme).headlineMedium,
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.surfaceRaised,
+        elevation: AppElevation.card,
+        margin: const EdgeInsets.all(0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          side: const BorderSide(color: AppColors.outline, width: 1),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: surfaceColor,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textSecondary,
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.cyan,
+        unselectedItemColor: AppColors.textMuted,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      textTheme: TextTheme(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: textPrimary,
-        ),
-        displayMedium: GoogleFonts.inter(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: textPrimary,
-        ),
-        displaySmall: GoogleFonts.inter(
-          fontSize: 20,
+      navigationRailTheme: const NavigationRailThemeData(
+        backgroundColor: AppColors.surface,
+        selectedIconTheme: IconThemeData(color: AppColors.cyan),
+        unselectedIconTheme: IconThemeData(color: AppColors.textMuted),
+        selectedLabelTextStyle: TextStyle(
+          color: AppColors.cyan,
           fontWeight: FontWeight.w600,
-          color: textPrimary,
         ),
-        headlineMedium: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-        headlineSmall: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-        titleLarge: GoogleFonts.inter(
-          fontSize: 16,
+        unselectedLabelTextStyle: TextStyle(
+          color: AppColors.textMuted,
           fontWeight: FontWeight.w500,
-          color: textPrimary,
         ),
-        bodyLarge: GoogleFonts.inter(fontSize: 16, color: textPrimary),
-        bodyMedium: GoogleFonts.inter(fontSize: 14, color: textSecondary),
-        bodySmall: GoogleFonts.inter(fontSize: 12, color: textMuted),
       ),
-      dividerTheme: const DividerThemeData(color: dividerColor, thickness: 1),
+      dividerTheme:
+          const DividerThemeData(color: AppColors.outline, thickness: 1),
       sliderTheme: SliderThemeData(
-        activeTrackColor: primaryColor,
-        inactiveTrackColor: dividerColor,
-        thumbColor: primaryColor,
-        overlayColor: primaryColor.withValues(alpha: 0.2),
+        activeTrackColor: AppColors.cyan,
+        inactiveTrackColor: AppColors.outline,
+        thumbColor: AppColors.cyan,
+        overlayColor: AppColors.cyanGlow,
         trackHeight: 4,
       ),
-      iconTheme: const IconThemeData(color: textSecondary),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.black,
+          backgroundColor: AppColors.cyanStrong,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+        ),
+      ),
+      iconTheme: const IconThemeData(color: AppColors.textSecondary),
+      extensions: <ThemeExtension<dynamic>>[
+        BroadcastCardTheme.console(),
+        BroadcastPillTheme.console(),
+        TransportControlTheme.console(),
+        SectionHeaderTheme.console(),
+      ],
     );
   }
 }

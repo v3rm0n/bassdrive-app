@@ -10,10 +10,11 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Confirm no product decisions are needed and proceed with this direction as default
   - Completion note (Loop 00001): Baseline review completed across the five specified files; fixed visual direction is locked as **high-contrast broadcast console** (dark-only, cyan-forward, metallic neutrals, strong typography); no product decisions were required, so execution proceeds with this default.
 
-- [ ] Create the new design foundation and wire it as app default theme:
+- [x] Create the new design foundation and wire it as app default theme:
   - Add a dedicated UI theme layer (tokens for color, type, spacing, radius, elevation, motion) under `lib/ui/theme/`
   - Define component theme extensions for cards, pills, transport controls, and section headers
   - Update app theme wiring in `lib/utils/theme.dart` and `lib/main.dart` to consume the new tokens while keeping dark-mode behavior
+  - Completion note (Loop 00001): Added `lib/ui/theme/app_theme_tokens.dart` for broadcast-console design tokens and `lib/ui/theme/component_theme_extensions.dart` for reusable component extensions; rewired `lib/utils/theme.dart` to consume tokenized color/typography/motion and register extensions; updated `lib/main.dart` to force dark-only theme via `themeMode` + `darkTheme`.
 
 - [ ] Build reusable Player UI primitives for the new visual language:
   - Create reusable widgets under `lib/ui/player/` for hero cover, live badge, track meta block, timeline/progress row, and transport cluster
