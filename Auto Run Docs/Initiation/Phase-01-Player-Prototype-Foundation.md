@@ -16,10 +16,11 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Update app theme wiring in `lib/utils/theme.dart` and `lib/main.dart` to consume the new tokens while keeping dark-mode behavior
   - Completion note (Loop 00001): Added `lib/ui/theme/app_theme_tokens.dart` for broadcast-console design tokens and `lib/ui/theme/component_theme_extensions.dart` for reusable component extensions; rewired `lib/utils/theme.dart` to consume tokenized color/typography/motion and register extensions; updated `lib/main.dart` to force dark-only theme via `themeMode` + `darkTheme`.
 
-- [ ] Build reusable Player UI primitives for the new visual language:
+- [x] Build reusable Player UI primitives for the new visual language:
   - Create reusable widgets under `lib/ui/player/` for hero cover, live badge, track meta block, timeline/progress row, and transport cluster
   - Ensure widgets accept current `AudioPlayerService` state and do not duplicate playback logic
   - Keep desktop and mobile sizing behavior in shared primitives to avoid divergent layouts
+  - Completion note (Loop 00001): Added reusable primitives under `lib/ui/player/` (`player_hero_cover.dart`, `live_badge.dart`, `track_meta_block.dart`, `timeline_progress_row.dart`, `transport_cluster.dart`) plus shared `PlayerViewState.fromService(...)` and `PlayerLayoutScale.fromWidth(...)` so UI reads current `AudioPlayerService` state without embedding playback logic while preserving mobile/desktop sizing from one source of truth; added widget tests in `test/ui/player/player_primitives_test.dart`.
 
 - [ ] Rebuild `FullPlayer` into a polished, working prototype using the new primitives:
   - Replace generic gradient/card treatment with the new broadcast-console composition (hero, metadata, timeline, controls, ambient motion)
