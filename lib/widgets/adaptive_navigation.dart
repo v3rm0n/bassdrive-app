@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../ui/theme/app_theme_tokens.dart';
+import '../ui/theme/component_theme_extensions.dart';
 import '../utils/platform_utils.dart';
 
 class NavigationItem {
@@ -67,126 +70,181 @@ class _DesktopLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final navigationTheme = theme.extension<NavigationChromeTheme>() ??
+        NavigationChromeTheme.console();
 
-    return Row(
-      children: [
-        // Sidebar
-        Container(
-          width: 280,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            border: Border(
-              right: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2),
-              ),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // App Header
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.radio,
-                      size: 32,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Bassdrive',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+    return Scaffold(
+      body: Row(
+        children: [
+          Container(
+            width: 280,
+            decoration: BoxDecoration(
+              color: navigationTheme.sidebarBackground,
+              border: Border(
+                right: BorderSide(
+                  color: navigationTheme.sidebarBorder.withValues(alpha: 0.62),
                 ),
               ),
-              const SizedBox(height: 16),
-              // Navigation Items
-              Expanded(
-                child: ListView.builder(
-                  itemCount: destinations.length,
-                  itemBuilder: (context, index) {
-                    final destination = destinations[index];
-                    final isSelected = currentIndex == destination.index;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.radio,
+                        size: 30,
+                        color: theme.colorScheme.primary,
                       ),
-                      child: Material(
-                        color: isSelected
-                            ? theme.colorScheme.primaryContainer
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          onTap: () => onDestinationSelected(destination.index),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: destination.isProminent ? 20 : 16,
-                              vertical: destination.isProminent ? 18 : 14,
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Bassdrive',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
+                  child: Text(
+                    'BROADCAST CONSOLE',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: destinations.length,
+                    itemBuilder: (context, index) {
+                      final destination = destinations[index];
+                      final isSelected = currentIndex == destination.index;
+                      final itemBackground = isSelected
+                          ? navigationTheme.activeItemBackground
+                          : destination.isProminent
+                              ? navigationTheme.prominentItemBackground
+                              : navigationTheme.itemBackground;
+                      final itemBorder = isSelected
+                          ? navigationTheme.activeItemBorder
+                          : destination.isProminent
+                              ? navigationTheme.prominentItemBorder
+                              : navigationTheme.sidebarBorder
+                                  .withValues(alpha: 0.45);
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xxs,
+                        ),
+                        child: AnimatedContainer(
+                          duration: AppMotion.regular,
+                          curve: AppMotion.entranceCurve,
+                          decoration: BoxDecoration(
+                            color: itemBackground,
+                            borderRadius: BorderRadius.circular(
+                              navigationTheme.itemRadius,
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isSelected && destination.selectedIcon != null
-                                      ? destination.selectedIcon
-                                      : destination.icon,
-                                  color: isSelected
-                                      ? theme.colorScheme.primary
-                                      : destination.isProminent
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.7),
-                                  size: destination.isProminent ? 28 : 24,
+                            border: Border.all(color: itemBorder),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: navigationTheme.activeGlow
+                                          .withValues(alpha: 0.22),
+                                      blurRadius: 16,
+                                      spreadRadius: 0.4,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () =>
+                                  onDestinationSelected(destination.index),
+                              borderRadius: BorderRadius.circular(
+                                navigationTheme.itemRadius,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: destination.isProminent
+                                      ? AppSpacing.lg
+                                      : AppSpacing.md,
+                                  vertical: destination.isProminent
+                                      ? AppSpacing.md
+                                      : AppSpacing.sm,
                                 ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  destination.label,
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    fontWeight:
-                                        isSelected || destination.isProminent
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                    fontSize: destination.isProminent ? 18 : 16,
-                                    color: isSelected
-                                        ? theme.colorScheme.onPrimaryContainer
-                                        : destination.isProminent
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.9),
-                                  ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isSelected &&
+                                              destination.selectedIcon != null
+                                          ? destination.selectedIcon
+                                          : destination.icon,
+                                      color: isSelected
+                                          ? AppColors.cyan
+                                          : destination.isProminent
+                                              ? AppColors.cyan
+                                              : AppColors.textSecondary,
+                                      size: destination.isProminent ? 27 : 23,
+                                    ),
+                                    const SizedBox(width: AppSpacing.md),
+                                    Text(
+                                      destination.label,
+                                      style:
+                                          theme.textTheme.bodyLarge?.copyWith(
+                                        fontWeight: isSelected ||
+                                                destination.isProminent
+                                            ? FontWeight.w700
+                                            : FontWeight.w600,
+                                        letterSpacing: destination.isProminent
+                                            ? 0.25
+                                            : 0.15,
+                                        color: isSelected
+                                            ? AppColors.textPrimary
+                                            : destination.isProminent
+                                                ? AppColors.cyan
+                                                : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              // Footer
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  '24/7 Drum & Bass Radio',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      );
+                    },
                   ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Text(
+                    '24/7 Drum & Bass Radio',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        // Content Area
-        Expanded(child: content),
-      ],
+          Expanded(child: content),
+        ],
+      ),
     );
   }
 }
@@ -206,21 +264,72 @@ class _MobileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final navigationTheme = theme.extension<NavigationChromeTheme>() ??
+        NavigationChromeTheme.console();
+
     return Scaffold(
       body: content,
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: onDestinationSelected,
+        indicatorColor: navigationTheme.activeItemBackground,
         destinations: destinations
             .map(
               (d) => NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon:
-                    d.selectedIcon != null ? Icon(d.selectedIcon) : null,
+                icon: _mobileIcon(
+                  destination: d,
+                  isSelected: false,
+                ),
+                selectedIcon: _mobileIcon(
+                  destination: d,
+                  isSelected: true,
+                ),
                 label: d.label,
               ),
             )
             .toList(),
+      ),
+    );
+  }
+
+  Widget _mobileIcon({
+    required NavigationItem destination,
+    required bool isSelected,
+  }) {
+    if (!destination.isProminent) {
+      return Icon(isSelected && destination.selectedIcon != null
+          ? destination.selectedIcon
+          : destination.icon);
+    }
+
+    return AnimatedContainer(
+      duration: AppMotion.regular,
+      curve: AppMotion.entranceCurve,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.cyanStrong : AppColors.surfaceOverlay,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(
+          color: isSelected ? AppColors.cyan : AppColors.outlineStrong,
+        ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: AppColors.cyanGlow.withValues(alpha: 0.24),
+                  blurRadius: 14,
+                ),
+              ]
+            : null,
+      ),
+      child: Icon(
+        isSelected && destination.selectedIcon != null
+            ? destination.selectedIcon
+            : destination.icon,
+        color: isSelected ? Colors.black : AppColors.cyan,
       ),
     );
   }

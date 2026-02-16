@@ -6,7 +6,8 @@ import 'services/api_service.dart';
 import 'services/audio_player_service.dart';
 import 'services/download_service.dart';
 import 'services/storage_service.dart';
-import 'utils/platform_utils.dart';
+import 'ui/theme/app_theme_tokens.dart';
+import 'ui/theme/component_theme_extensions.dart';
 import 'utils/theme.dart';
 import 'widgets/adaptive_navigation.dart';
 import 'widgets/full_player.dart';
@@ -47,16 +48,26 @@ class BassdriveApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+    this.apiService,
+    this.playerService,
+    this.storageService,
+  });
+
+  final ApiService? apiService;
+  final AudioPlayerService? playerService;
+  final StorageService? storageService;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ApiService _apiService = ApiService();
-  final AudioPlayerService _playerService = AudioPlayerService();
-  final StorageService _storageService = StorageService();
+  late final ApiService _apiService;
+  late final AudioPlayerService _playerService;
+  late final StorageService _storageService;
+  late final bool _ownsPlayerService;
 
   int _currentIndex = 0;
   ApiResponse? _apiResponse;
@@ -66,6 +77,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _apiService = widget.apiService ?? ApiService();
+    _playerService = widget.playerService ?? AudioPlayerService();
+    _storageService = widget.storageService ?? StorageService();
+    _ownsPlayerService = widget.playerService == null;
+
     _loadData();
     _playerService.addListener(_onPlayerStateChanged);
     _startProgressTracking();
@@ -74,7 +90,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _playerService.removeListener(_onPlayerStateChanged);
-    _playerService.dispose();
+    if (_ownsPlayerService) {
+      _playerService.dispose();
+    }
     super.dispose();
   }
 
@@ -211,50 +229,54 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
 
     if (_isLoading) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: theme.colorScheme.primary),
-              const SizedBox(height: 16),
-              Text('Loading Bassdrive...', style: theme.textTheme.bodyLarge),
-            ],
-          ),
+      return _ChromeStatusScaffold(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: theme.colorScheme.primary),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Booting broadcast console...',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Loading live stream and archive signal.',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ],
         ),
       );
     }
 
     if (_error != null) {
-      return Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: theme.colorScheme.error,
-                ),
-                const SizedBox(height: 16),
-                Text('Failed to load', style: theme.textTheme.displaySmall),
-                const SizedBox(height: 8),
-                Text(
-                  _error!,
-                  style: theme.textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _loadData,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
+      return _ChromeStatusScaffold(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.portable_wifi_off, size: 56, color: AppColors.error),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Signal lost',
+              style: theme.textTheme.displaySmall?.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              _error!,
+              style: theme.textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton.icon(
+              onPressed: _loadData,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Re-sync'),
+            ),
+          ],
         ),
       );
     }
@@ -324,52 +346,107 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ];
 
-    // Desktop layout
-    if (PlatformUtils.isDesktop) {
-      return Scaffold(
-        body: AdaptiveNavigation(
-          currentIndex: _currentIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          destinations: destinations,
-          content: screens[_currentIndex],
-        ),
-      );
-    }
+    return AdaptiveNavigation(
+      currentIndex: _currentIndex,
+      onDestinationSelected: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      destinations: destinations,
+      content: screens[_currentIndex],
+    );
+  }
+}
 
-    // Mobile layout
+class _ChromeStatusScaffold extends StatelessWidget {
+  const _ChromeStatusScaffold({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardTheme =
+        theme.extension<BroadcastCardTheme>() ?? BroadcastCardTheme.console();
+
     return Scaffold(
-      body: screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.radio),
-            label: 'Live',
+      body: Stack(
+        children: [
+          const _StatusBackdrop(),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 540),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: cardTheme.background.withValues(alpha: 0.86),
+                    borderRadius: BorderRadius.circular(cardTheme.radius),
+                    border: Border.all(color: cardTheme.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cardTheme.glow.withValues(alpha: 0.18),
+                        blurRadius: 20,
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: cardTheme.padding,
+                    child: child,
+                  ),
+                ),
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_music),
-            label: 'Archive',
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBackdrop extends StatelessWidget {
+  const _StatusBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.surface, AppColors.background],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            left: -80,
+            top: -120,
+            child: IgnorePointer(
+              child: Container(
+                width: 320,
+                height: 320,
+                decoration: BoxDecoration(
+                  color: AppColors.cyanGlow.withValues(alpha: 0.16),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.play_circle),
-            label: 'Player',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favourites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.download),
-            label: 'Downloads',
+          Positioned(
+            right: -70,
+            bottom: -110,
+            child: IgnorePointer(
+              child: Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  color: AppColors.outlineStrong.withValues(alpha: 0.16),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
           ),
         ],
       ),

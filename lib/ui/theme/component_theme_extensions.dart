@@ -280,3 +280,102 @@ class SectionHeaderTheme extends ThemeExtension<SectionHeaderTheme> {
     );
   }
 }
+
+@immutable
+class NavigationChromeTheme extends ThemeExtension<NavigationChromeTheme> {
+  const NavigationChromeTheme({
+    required this.sidebarBackground,
+    required this.sidebarBorder,
+    required this.itemBackground,
+    required this.activeItemBackground,
+    required this.activeItemBorder,
+    required this.prominentItemBackground,
+    required this.prominentItemBorder,
+    required this.activeGlow,
+    required this.itemRadius,
+  });
+
+  final Color sidebarBackground;
+  final Color sidebarBorder;
+  final Color itemBackground;
+  final Color activeItemBackground;
+  final Color activeItemBorder;
+  final Color prominentItemBackground;
+  final Color prominentItemBorder;
+  final Color activeGlow;
+  final double itemRadius;
+
+  factory NavigationChromeTheme.console() {
+    return const NavigationChromeTheme(
+      sidebarBackground: AppColors.surface,
+      sidebarBorder: AppColors.outline,
+      itemBackground: AppColors.surface,
+      activeItemBackground: AppColors.surfaceOverlay,
+      activeItemBorder: AppColors.cyanStrong,
+      prominentItemBackground: AppColors.surfaceOverlay,
+      prominentItemBorder: AppColors.outlineStrong,
+      activeGlow: AppColors.cyanGlow,
+      itemRadius: AppRadii.md,
+    );
+  }
+
+  @override
+  NavigationChromeTheme copyWith({
+    Color? sidebarBackground,
+    Color? sidebarBorder,
+    Color? itemBackground,
+    Color? activeItemBackground,
+    Color? activeItemBorder,
+    Color? prominentItemBackground,
+    Color? prominentItemBorder,
+    Color? activeGlow,
+    double? itemRadius,
+  }) {
+    return NavigationChromeTheme(
+      sidebarBackground: sidebarBackground ?? this.sidebarBackground,
+      sidebarBorder: sidebarBorder ?? this.sidebarBorder,
+      itemBackground: itemBackground ?? this.itemBackground,
+      activeItemBackground: activeItemBackground ?? this.activeItemBackground,
+      activeItemBorder: activeItemBorder ?? this.activeItemBorder,
+      prominentItemBackground:
+          prominentItemBackground ?? this.prominentItemBackground,
+      prominentItemBorder: prominentItemBorder ?? this.prominentItemBorder,
+      activeGlow: activeGlow ?? this.activeGlow,
+      itemRadius: itemRadius ?? this.itemRadius,
+    );
+  }
+
+  @override
+  NavigationChromeTheme lerp(
+    ThemeExtension<NavigationChromeTheme>? other,
+    double t,
+  ) {
+    if (other is! NavigationChromeTheme) {
+      return this;
+    }
+
+    return NavigationChromeTheme(
+      sidebarBackground:
+          Color.lerp(sidebarBackground, other.sidebarBackground, t) ??
+              sidebarBackground,
+      sidebarBorder:
+          Color.lerp(sidebarBorder, other.sidebarBorder, t) ?? sidebarBorder,
+      itemBackground:
+          Color.lerp(itemBackground, other.itemBackground, t) ?? itemBackground,
+      activeItemBackground:
+          Color.lerp(activeItemBackground, other.activeItemBackground, t) ??
+              activeItemBackground,
+      activeItemBorder:
+          Color.lerp(activeItemBorder, other.activeItemBorder, t) ??
+              activeItemBorder,
+      prominentItemBackground: Color.lerp(
+              prominentItemBackground, other.prominentItemBackground, t) ??
+          prominentItemBackground,
+      prominentItemBorder:
+          Color.lerp(prominentItemBorder, other.prominentItemBorder, t) ??
+              prominentItemBorder,
+      activeGlow: Color.lerp(activeGlow, other.activeGlow, t) ?? activeGlow,
+      itemRadius: lerpDouble(itemRadius, other.itemRadius, t) ?? itemRadius,
+    );
+  }
+}

@@ -28,10 +28,11 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Add subtle purposeful animations (entry reveal + play-state pulse) with safe performance defaults
   - Completion note (Loop 00001): Rebuilt `lib/widgets/full_player.dart` around the shared `lib/ui/player/` primitives with a new broadcast-console composition (ambient background, hero, metadata block, timeline row, transport cluster), preserved all existing playback interactions (idle -> live start, play/pause toggle, archive seek + skip, stats screen access), and added lightweight entry reveal + play-state pulse animations; added widget coverage in `test/widgets/full_player_test.dart` for idle live-start and archive timeline/control rendering.
 
-- [ ] Integrate prototype-level app chrome consistency around the Player:
+- [x] Integrate prototype-level app chrome consistency around the Player:
   - Refine navigation prominence for Player tab/rail item and active-state styling through shared tokens
   - Harmonize top-level loading/error states in `HomeScreen` with the new visual system so first impression matches the Player redesign
   - Verify no regression in desktop sidebar and mobile bottom navigation flows
+  - Completion note (Loop 00001): Updated `lib/widgets/adaptive_navigation.dart` to apply tokenized broadcast-console chrome across desktop rail and mobile navigation, including stronger Player prominence and active-state styling via the new `NavigationChromeTheme`; updated `lib/main.dart` to route both desktop/mobile navigation through `AdaptiveNavigation` and replaced plain loading/error scaffolds with themed console status surfaces; added regression coverage in `test/widgets/app_chrome_test.dart` for loading/error chrome and adaptive navigation interaction.
 
 - [ ] Produce structured implementation artifacts alongside the code changes:
   - Create `docs/architecture/player-ui-foundation.md` with YAML front matter (`type: reference`, title, created date, tags)

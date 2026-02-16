@@ -58,6 +58,19 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surface,
+        indicatorColor: AppColors.surfaceOverlay,
+        height: 74,
+        elevation: AppElevation.floating,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return AppTypography.textTheme(colorScheme).labelLarge?.copyWith(
+                color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                letterSpacing: isSelected ? 0.55 : 0.45,
+              );
+        }),
+      ),
       navigationRailTheme: const NavigationRailThemeData(
         backgroundColor: AppColors.surface,
         selectedIconTheme: IconThemeData(color: AppColors.cyan),
@@ -95,6 +108,7 @@ class AppTheme {
         BroadcastPillTheme.console(),
         TransportControlTheme.console(),
         SectionHeaderTheme.console(),
+        NavigationChromeTheme.console(),
       ],
     );
   }
