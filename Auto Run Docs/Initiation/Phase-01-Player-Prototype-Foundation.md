@@ -49,3 +49,4 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Run `flutter analyze`
   - Run targeted and full test suites (`flutter test`)
   - Run the app on one local target and confirm the redesigned Player renders and functions end-to-end
+  - Status note (Loop 00001): Blocked in this environment because the Flutter SDK/CLI is unavailable (`flutter: command not found`), so `flutter analyze`, `flutter test`, and local runtime verification could not be executed.
