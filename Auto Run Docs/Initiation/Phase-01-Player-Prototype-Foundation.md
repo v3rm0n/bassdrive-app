@@ -50,3 +50,4 @@ This phase establishes a distinctive visual foundation and ships a fully working
   - Run targeted and full test suites (`flutter test`)
   - Run the app on one local target and confirm the redesigned Player renders and functions end-to-end
   - Status note (Loop 00001): Re-attempted `flutter analyze`, `flutter test`, and `flutter run -d macos --release`; all fail immediately with `flutter: command not found` in this environment, so verification remains blocked until Flutter SDK/CLI is installed on PATH.
+  - Status note (Loop 00001, Maestro): Re-ran `flutter analyze`, `flutter test`, and `flutter run -d macos --release` from `/Users/maidok/Developer/bassdrive-app`; each command still fails with `zsh:1: command not found: flutter`, so no verification fixes can be applied until Flutter is installed and available on PATH.
