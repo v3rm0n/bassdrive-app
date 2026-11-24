@@ -86,6 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   ApiResponse? _apiResponse;
   bool _isLoading = true;
+  String? _nowPlaying;
+  Timer? _nowPlayingTimer;
+  bool _fetchingNowPlaying = false;
 
   @override
   void initState() {
@@ -104,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _progressTimer?.cancel();
+    _nowPlayingTimer?.cancel();
     _playerService.removeListener(_onPlayerStateChanged);
     if (_ownsPlayerService) {
       _playerService.dispose();
@@ -176,11 +180,31 @@ class _HomeScreenState extends State<HomeScreen> {
         _apiResponse = response;
         _isLoading = false;
       });
+      if (_nowPlayingTimer == null) {
+        unawaited(_refreshNowPlaying());
+        _nowPlayingTimer = Timer.periodic(
+          const Duration(minutes: 2),
+          (_) => unawaited(_refreshNowPlaying()),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _refreshNowPlaying() async {
+    if (_fetchingNowPlaying) return;
+    _fetchingNowPlaying = true;
+    try {
+      final title = await _apiService.fetchNowPlaying();
+      if (mounted && title != _nowPlaying) {
+        setState(() => _nowPlaying = title);
+      }
+    } finally {
+      _fetchingNowPlaying = false;
     }
   }
 
@@ -241,6 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
         playerService: _playerService,
         storageService: _storageService,
         liveStreamUrl: data?.live,
+        nowPlaying: _nowPlaying,
       );
     } else if (_currentIndex == 4) {
       content = DownloadsScreen(
@@ -255,6 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
         0 => LiveStreamScreen(
             playerService: _playerService,
             liveStreamUrl: data.live,
+            nowPlaying: _nowPlaying,
             storageService: _storageService,
           ),
         1 => ArchiveScreen(

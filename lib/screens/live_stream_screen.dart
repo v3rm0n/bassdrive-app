@@ -7,12 +7,14 @@ import '../ui/theme/app_theme_tokens.dart';
 class LiveStreamScreen extends StatelessWidget {
   final AudioPlayerService playerService;
   final String liveStreamUrl;
+  final String? nowPlaying;
   final StorageService storageService;
 
   const LiveStreamScreen({
     super.key,
     required this.playerService,
     required this.liveStreamUrl,
+    this.nowPlaying,
     required this.storageService,
   });
 
@@ -93,6 +95,23 @@ class LiveStreamScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
+                        if (nowPlaying case final title?)
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: Column(
+                              children: [
+                                Text('Now playing',
+                                    style: theme.textTheme.bodySmall),
+                                const SizedBox(height: AppSpacing.xxs),
+                                Text(
+                                  title,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                              ],
+                            ),
+                          ),
                         if (playerService.hasError)
                           Padding(
                             padding:

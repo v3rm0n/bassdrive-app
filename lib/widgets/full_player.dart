@@ -10,12 +10,14 @@ class FullPlayer extends StatefulWidget {
   final AudioPlayerService playerService;
   final StorageService storageService;
   final String? liveStreamUrl;
+  final String? nowPlaying;
 
   const FullPlayer({
     super.key,
     required this.playerService,
     required this.storageService,
     required this.liveStreamUrl,
+    this.nowPlaying,
   });
 
   @override
@@ -56,7 +58,10 @@ class _FullPlayerState extends State<FullPlayer> {
   }
 
   Widget _buildPlayer(BuildContext context) {
-    final viewState = PlayerViewState.fromService(widget.playerService);
+    final viewState = PlayerViewState.fromService(
+      widget.playerService,
+      nowPlaying: widget.nowPlaying,
+    );
 
     final isReadyState = !viewState.hasContent;
     final liveAvailable = widget.liveStreamUrl != null;

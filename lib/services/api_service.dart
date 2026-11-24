@@ -1,13 +1,33 @@
 import 'package:dio/dio.dart';
+import 'package:html/parser.dart' as html;
 import '../models/api_response.dart';
 
 class ApiService {
   final Dio _dio = Dio();
   static const String _baseUrl = 'https://bd.maido.io/api.json';
+  static const String _nowPlayingUrl =
+      'https://www.bassdrive.com/now-playing.php';
 
   ApiService() {
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
+  }
+
+  Future<String?> fetchNowPlaying() async {
+    try {
+      final response = await _dio.get<String>(
+        _nowPlayingUrl,
+        options: Options(responseType: ResponseType.plain),
+      );
+      final title = html
+          .parseFragment(response.data ?? '')
+          .text
+          ?.replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      return title == null || title.isEmpty ? null : title;
+    } on DioException {
+      return null;
+    }
   }
 
   Future<ApiResponse> fetchArchive() async {

@@ -32,7 +32,10 @@ class PlayerViewState {
 
   bool get canSeek => duration > Duration.zero;
 
-  factory PlayerViewState.fromService(AudioPlayerService service) {
+  factory PlayerViewState.fromService(
+    AudioPlayerService service, {
+    String? nowPlaying,
+  }) {
     final episode = service.currentEpisode;
     final hasContent = service.isLive || episode != null;
 
@@ -41,7 +44,7 @@ class PlayerViewState {
     String? detail;
     if (service.isLive) {
       title = 'Bassdrive live';
-      subtitle = 'Worldwide drum & bass, around the clock';
+      subtitle = nowPlaying ?? 'Worldwide drum & bass, around the clock';
     } else if (episode != null) {
       title = episode.title;
       subtitle = episode.show;
@@ -49,6 +52,7 @@ class PlayerViewState {
     } else {
       title = 'Bassdrive';
       subtitle = 'Press play to tune in to the live stream';
+      detail = nowPlaying;
     }
 
     return PlayerViewState(
