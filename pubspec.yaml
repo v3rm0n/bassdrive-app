@@ -32,21 +32,21 @@ dependencies:
     sdk: flutter
 
   # Audio playback
-  just_audio: ^0.10.5
-  just_audio_windows: ^0.2.2
-  audio_service: ^0.18.18
+  just_audio: ^0.10.6
+  just_audio_windows: ^0.2.3
+  audio_service: ^0.18.19
   just_audio_background: ^0.0.1-beta.17
 
   # Networking
-  dio: ^5.9.1
+  dio: ^5.11.1
 
   # Local storage
-  shared_preferences: ^2.3.0
-  path_provider: ^2.1.5
+  shared_preferences: ^2.5.5
+  path_provider: ^2.1.6
 
   # UI
-  cupertino_icons: ^1.0.8
-  google_fonts: ^6.0.0
+  cupertino_icons: ^1.0.9
+  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:
@@ -57,10 +57,10 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
   # App icon generator
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
   android: true
