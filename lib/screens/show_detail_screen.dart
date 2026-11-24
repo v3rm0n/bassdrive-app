@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/episode.dart';
-import '../models/listening_progress.dart';
 import '../models/show.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
@@ -42,42 +41,6 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
               episode.show.toLowerCase().contains(_searchQuery.toLowerCase()),
         )
         .toList();
-  }
-
-  Future<void> _playEpisode(Episode episode) async {
-    // Check if this episode is already the current episode
-    final isCurrentEpisode =
-        widget.playerService.currentEpisode?.id == episode.id;
-
-    if (isCurrentEpisode) {
-      // If already playing, pop back - user can navigate to player tab
-      if (context.mounted) {
-        Navigator.pop(context);
-      }
-      return;
-    }
-
-    final progress = await widget.storageService.getProgress(episode.id);
-
-    await widget.playerService.playEpisode(
-      episode,
-      startPosition: progress?.position,
-    );
-
-    await widget.storageService.saveProgress(
-      ListeningProgress(
-        episodeId: episode.id,
-        episodeName: episode.displayName,
-        showName: episode.show,
-        position: progress?.position ?? Duration.zero,
-        lastPlayed: DateTime.now(),
-      ),
-    );
-
-    // Navigate to player screen
-    if (mounted) {
-      widget.onPlayEpisode?.call();
-    }
   }
 
   @override
@@ -210,11 +173,16 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
                     itemBuilder: (context, index) {
                       final episode = filteredEpisodes[index];
                       return EpisodeListItem(
+                        key: ValueKey(episode.id),
                         episode: episode,
                         show: widget.show,
                         playerService: widget.playerService,
                         storageService: widget.storageService,
-                        onTap: () => _playEpisode(episode),
+                        onOpenPlayer: () {
+                          if (ModalRoute.of(context)?.isCurrent != true) return;
+                          Navigator.pop(context);
+                          widget.onPlayEpisode?.call();
+                        },
                       );
                     },
                   ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/episode.dart';
-import '../models/listening_progress.dart';
 import '../services/audio_player_service.dart';
 import '../services/download_service.dart';
 import '../services/storage_service.dart';
@@ -40,37 +39,6 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     if (mounted) {
       setState(() {});
     }
-  }
-
-  Future<void> _playEpisode(Episode episode) async {
-    // Check if this episode is already the current episode
-    final isCurrentEpisode =
-        widget.playerService.currentEpisode?.id == episode.id;
-
-    if (isCurrentEpisode) {
-      // If already playing, do nothing - user can navigate to player tab
-      return;
-    }
-
-    final progress = await widget.storageService.getProgress(episode.id);
-
-    await widget.playerService.playEpisode(
-      episode,
-      startPosition: progress?.position,
-    );
-
-    await widget.storageService.saveProgress(
-      ListeningProgress(
-        episodeId: episode.id,
-        episodeName: episode.displayName,
-        showName: episode.show,
-        position: progress?.position ?? Duration.zero,
-        lastPlayed: DateTime.now(),
-      ),
-    );
-
-    // Navigate to player screen
-    widget.onPlayEpisode?.call();
   }
 
   Future<void> _deleteAllDownloads() async {
@@ -269,10 +237,11 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                           return false; // We handle deletion manually
                         },
                         child: EpisodeListItem(
+                          key: ValueKey(episode.id),
                           episode: episode,
                           playerService: widget.playerService,
                           storageService: widget.storageService,
-                          onTap: () => _playEpisode(episode),
+                          onOpenPlayer: widget.onPlayEpisode,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

@@ -10,7 +10,7 @@ import '../ui/theme/component_theme_extensions.dart';
 class FullPlayer extends StatefulWidget {
   final AudioPlayerService playerService;
   final StorageService storageService;
-  final String liveStreamUrl;
+  final String? liveStreamUrl;
 
   const FullPlayer({
     super.key,
@@ -85,7 +85,8 @@ class _FullPlayerState extends State<FullPlayer> with TickerProviderStateMixin {
 
     if (!hasContent) {
       // Start live stream when nothing is playing
-      await widget.playerService.playLiveStream(widget.liveStreamUrl);
+      final url = widget.liveStreamUrl;
+      if (url != null) await widget.playerService.playLiveStream(url);
     } else {
       // Toggle play/pause when something is already loaded
       await widget.playerService.togglePlayPause();
@@ -108,17 +109,23 @@ class _FullPlayerState extends State<FullPlayer> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+        listenable: widget.playerService,
+        builder: (context, _) => _buildPlayer(context));
+  }
+
+  Widget _buildPlayer(BuildContext context) {
     final theme = Theme.of(context);
     final cardTheme =
         theme.extension<BroadcastCardTheme>() ?? BroadcastCardTheme.console();
-    final viewportWidth = MediaQuery.sizeOf(context).width;
-    final scale = PlayerLayoutScale.fromWidth(viewportWidth);
+
     final viewState = PlayerViewState.fromService(widget.playerService);
 
     _syncPulse(viewState.isPlaying);
 
     final isReadyState = !viewState.hasContent;
-    final showLiveBadge = viewState.isLive || isReadyState;
+    final liveAvailable = widget.liveStreamUrl != null;
+    final showLiveBadge = viewState.isLive || (isReadyState && liveAvailable);
     final heroIcon = showLiveBadge ? Icons.radio : Icons.music_note;
 
     return Scaffold(
@@ -149,6 +156,8 @@ class _FullPlayerState extends State<FullPlayer> with TickerProviderStateMixin {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
+                      final scale = PlayerLayoutScale.forViewport(
+                          constraints.maxWidth, constraints.maxHeight);
                       return SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: ConstrainedBox(
@@ -205,7 +214,10 @@ class _FullPlayerState extends State<FullPlayer> with TickerProviderStateMixin {
                                                 height: scale.sectionSpacing),
                                             TrackMetaBlock(
                                               title: viewState.title,
-                                              subtitle: viewState.subtitle,
+                                              subtitle: isReadyState &&
+                                                      !liveAvailable
+                                                  ? 'Choose an episode from Downloads'
+                                                  : viewState.subtitle,
                                               scale: scale,
                                             ),
                                             SizedBox(
@@ -224,7 +236,9 @@ class _FullPlayerState extends State<FullPlayer> with TickerProviderStateMixin {
                                               viewState: viewState,
                                               scale: scale,
                                               onPrimaryPressed:
-                                                  _handlePlayButton,
+                                                  isReadyState && !liveAvailable
+                                                      ? null
+                                                      : _handlePlayButton,
                                               onSkipBack: viewState.showTimeline
                                                   ? () {
                                                       widget.playerService
