@@ -22,11 +22,11 @@ class BroadcastCardTheme extends ThemeExtension<BroadcastCardTheme> {
   final EdgeInsetsGeometry padding;
   final double elevation;
 
-  factory BroadcastCardTheme.console() {
+  factory BroadcastCardTheme.standard() {
     return const BroadcastCardTheme(
-      background: AppColors.surfaceRaised,
-      border: AppColors.outlineStrong,
-      glow: AppColors.cyanGlow,
+      background: AppColors.surface,
+      border: AppColors.outline,
+      glow: AppColors.signalGlow,
       radius: AppRadii.lg,
       padding: EdgeInsets.all(AppSpacing.lg),
       elevation: AppElevation.card,
@@ -87,12 +87,12 @@ class BroadcastPillTheme extends ThemeExtension<BroadcastPillTheme> {
   final Color border;
   final EdgeInsetsGeometry padding;
 
-  factory BroadcastPillTheme.console() {
+  factory BroadcastPillTheme.standard() {
     return const BroadcastPillTheme(
       background: AppColors.surfaceOverlay,
-      activeBackground: AppColors.cyanStrong,
+      activeBackground: AppColors.signal,
       text: AppColors.textSecondary,
-      activeText: Colors.black,
+      activeText: AppColors.onSignal,
       border: AppColors.outline,
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
     );
@@ -156,15 +156,15 @@ class TransportControlTheme extends ThemeExtension<TransportControlTheme> {
   final double secondarySize;
   final Color ringColor;
 
-  factory TransportControlTheme.console() {
+  factory TransportControlTheme.standard() {
     return const TransportControlTheme(
-      primaryBackground: AppColors.cyanStrong,
-      secondaryBackground: AppColors.surfaceOverlay,
-      primaryIcon: Colors.black,
+      primaryBackground: AppColors.signal,
+      secondaryBackground: AppColors.outlineStrong,
+      primaryIcon: AppColors.onSignal,
       secondaryIcon: AppColors.textPrimary,
-      primarySize: 76,
-      secondarySize: 56,
-      ringColor: AppColors.cyanGlow,
+      primarySize: 80,
+      secondarySize: 52,
+      ringColor: AppColors.signalGlow,
     );
   }
 
@@ -232,11 +232,11 @@ class SectionHeaderTheme extends ThemeExtension<SectionHeaderTheme> {
   final double kickerSpacing;
   final double contentSpacing;
 
-  factory SectionHeaderTheme.console() {
+  factory SectionHeaderTheme.standard() {
     return const SectionHeaderTheme(
       titleColor: AppColors.textPrimary,
       subtitleColor: AppColors.textSecondary,
-      ruleColor: AppColors.outlineStrong,
+      ruleColor: AppColors.outline,
       kickerSpacing: AppSpacing.xs,
       contentSpacing: AppSpacing.md,
     );
@@ -305,17 +305,17 @@ class NavigationChromeTheme extends ThemeExtension<NavigationChromeTheme> {
   final Color activeGlow;
   final double itemRadius;
 
-  factory NavigationChromeTheme.console() {
+  factory NavigationChromeTheme.standard() {
     return const NavigationChromeTheme(
       sidebarBackground: AppColors.surface,
       sidebarBorder: AppColors.outline,
       itemBackground: AppColors.surface,
-      activeItemBackground: AppColors.surfaceOverlay,
-      activeItemBorder: AppColors.cyanStrong,
-      prominentItemBackground: AppColors.surfaceOverlay,
-      prominentItemBorder: AppColors.outlineStrong,
-      activeGlow: AppColors.cyanGlow,
-      itemRadius: AppRadii.md,
+      activeItemBackground: AppColors.surfaceRaised,
+      activeItemBorder: AppColors.signal,
+      prominentItemBackground: AppColors.surface,
+      prominentItemBorder: AppColors.outline,
+      activeGlow: AppColors.signalGlow,
+      itemRadius: AppRadii.sm,
     );
   }
 

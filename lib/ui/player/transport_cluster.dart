@@ -25,7 +25,7 @@ class TransportCluster extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controlTheme = theme.extension<TransportControlTheme>() ??
-        TransportControlTheme.console();
+        TransportControlTheme.standard();
     final showSkipButtons = viewState.showTimeline;
 
     return Row(
@@ -34,6 +34,7 @@ class TransportCluster extends StatelessWidget {
         if (showSkipButtons)
           _SecondaryControl(
             icon: Icons.replay_10,
+            tooltip: 'Back 10 seconds',
             size: controlTheme.secondarySize,
             iconColor: controlTheme.secondaryIcon,
             background: controlTheme.secondaryBackground,
@@ -53,6 +54,7 @@ class TransportCluster extends StatelessWidget {
         if (showSkipButtons)
           _SecondaryControl(
             icon: Icons.forward_30,
+            tooltip: 'Forward 30 seconds',
             size: controlTheme.secondarySize,
             iconColor: controlTheme.secondaryIcon,
             background: controlTheme.secondaryBackground,
@@ -94,9 +96,8 @@ class _PrimaryControl extends StatelessWidget {
         color: background,
         boxShadow: [
           BoxShadow(
-            color: ringColor.withValues(alpha: isPlaying ? 0.52 : 0.24),
-            blurRadius: isPlaying ? 24 : 12,
-            spreadRadius: isPlaying ? 4 : 1,
+            color: ringColor.withValues(alpha: isPlaying ? 0.5 : 0),
+            blurRadius: 20,
           ),
         ],
       ),
@@ -105,25 +106,29 @@ class _PrimaryControl extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
-          child: Center(
-            child: AnimatedSwitcher(
-              duration: AppMotion.quick,
-              child: isLoading
-                  ? SizedBox(
-                      key: const ValueKey<String>('loading'),
-                      width: size * 0.36,
-                      height: size * 0.36,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.4,
-                        valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+          child: Semantics(
+            button: true,
+            label: isPlaying ? 'Pause' : 'Play',
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: AppMotion.quick,
+                child: isLoading
+                    ? SizedBox(
+                        key: const ValueKey<String>('loading'),
+                        width: size * 0.36,
+                        height: size * 0.36,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                        ),
+                      )
+                    : Icon(
+                        isPlaying ? Icons.pause : Icons.play_arrow,
+                        key: ValueKey<bool>(isPlaying),
+                        size: size * 0.52,
+                        color: iconColor,
                       ),
-                    )
-                  : Icon(
-                      isPlaying ? Icons.pause : Icons.play_arrow,
-                      key: ValueKey<bool>(isPlaying),
-                      size: size * 0.52,
-                      color: iconColor,
-                    ),
+              ),
             ),
           ),
         ),
@@ -135,6 +140,7 @@ class _PrimaryControl extends StatelessWidget {
 class _SecondaryControl extends StatelessWidget {
   const _SecondaryControl({
     required this.icon,
+    required this.tooltip,
     required this.size,
     required this.iconColor,
     required this.background,
@@ -142,6 +148,7 @@ class _SecondaryControl extends StatelessWidget {
   });
 
   final IconData icon;
+  final String tooltip;
   final double size;
   final Color iconColor;
   final Color background;
@@ -149,16 +156,19 @@ class _SecondaryControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Material(
-        color: background,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: Icon(icon, color: iconColor, size: size * 0.46),
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Material(
+          color: Colors.transparent,
+          shape: CircleBorder(side: BorderSide(color: background, width: 1.5)),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: Icon(icon, color: iconColor, size: size * 0.46),
+          ),
         ),
       ),
     );

@@ -21,7 +21,7 @@ void main() {
     await StorageService().initialize();
   });
 
-  testWidgets('HomeScreen loading state uses console status copy', (
+  testWidgets('HomeScreen loading state uses status copy', (
     tester,
   ) async {
     final pendingApi = _PendingApiService();
@@ -37,9 +37,9 @@ void main() {
       ),
     );
 
-    expect(find.text('Booting broadcast console...'), findsOneWidget);
+    expect(find.text('Tuning in'), findsOneWidget);
     expect(
-        find.text('Loading live stream and archive signal.'), findsOneWidget);
+        find.text('Loading the live stream and show archive.'), findsOneWidget);
     await tester.tap(find.text('Downloads'));
     await tester.pumpAndSettle();
     expect(find.text('No Downloads'), findsOneWidget);
@@ -67,10 +67,10 @@ void main() {
 
     await tester.pump();
 
-    expect(find.text('Signal lost'), findsOneWidget);
-    expect(find.text('Re-sync'), findsOneWidget);
+    expect(find.text("Can't reach Bassdrive"), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
 
-    await tester.tap(find.text('Re-sync'));
+    await tester.tap(find.text('Try again'));
     await tester.pump();
     expect(failingApi.fetchCallCount, 2);
     await tester.tap(find.text('Downloads'));

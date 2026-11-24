@@ -4,6 +4,7 @@ import '../models/show.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
 import '../widgets/episode_list_item.dart';
+import '../widgets/show_list_item.dart';
 
 class ShowDetailScreen extends StatefulWidget {
   final Show show;
@@ -49,45 +50,18 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
     final filteredEpisodes = _filterEpisodes(widget.show.episodes);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.show.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
+      appBar: AppBar(),
       body: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              border: Border(bottom: BorderSide(color: theme.dividerColor)),
-            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            theme.colorScheme.primary.withValues(alpha: 0.3),
-                            theme.colorScheme.secondary.withValues(alpha: 0.3),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.podcasts,
-                        size: 40,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
+                    ShowMonogram(name: widget.show.name, size: 72),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -96,12 +70,12 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
                           Text(
                             widget.show.name,
                             style: theme.textTheme.displaySmall,
-                            maxLines: 2,
+                            maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${widget.show.episodes.length} episodes',
+                            '${widget.show.episodes.length} episodes in the archive',
                             style: theme.textTheme.bodyMedium,
                           ),
                         ],
@@ -113,11 +87,12 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search episodes...',
+                    hintText: 'Search episodes',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear),
+                            tooltip: 'Clear search',
                             onPressed: () {
                               setState(() {
                                 _searchController.clear();
@@ -126,12 +101,6 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
                             },
                           )
                         : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: theme.colorScheme.surface,
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -142,33 +111,22 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
               ],
             ),
           ),
+          const Divider(),
           Expanded(
             child: filteredEpisodes.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
                         Text(
-                          'No episodes found',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
+                          'No episodes match "$_searchQuery"',
+                          style: theme.textTheme.bodyLarge,
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.only(bottom: 16),
                     itemCount: filteredEpisodes.length,
                     itemBuilder: (context, index) {
                       final episode = filteredEpisodes[index];
@@ -176,6 +134,7 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
                         key: ValueKey(episode.id),
                         episode: episode,
                         show: widget.show,
+                        showShowName: false,
                         playerService: widget.playerService,
                         storageService: widget.storageService,
                         onOpenPlayer: () {

@@ -7,6 +7,7 @@ class PlayerLayoutScale {
     required this.sectionSpacing,
     required this.timelineBottomSpacing,
     required this.transportGap,
+    required this.titleSize,
   });
 
   final double maxContentWidth;
@@ -16,6 +17,7 @@ class PlayerLayoutScale {
   final double sectionSpacing;
   final double timelineBottomSpacing;
   final double transportGap;
+  final double titleSize;
 
   static PlayerLayoutScale forViewport(double width, double height) {
     if (height < 620) {
@@ -27,6 +29,7 @@ class PlayerLayoutScale {
         sectionSpacing: 12,
         timelineBottomSpacing: 8,
         transportGap: 18,
+        titleSize: 28,
       );
     }
     return fromWidth(width);
@@ -42,6 +45,7 @@ class PlayerLayoutScale {
         sectionSpacing: 44,
         timelineBottomSpacing: 28,
         transportGap: 28,
+        titleSize: 52,
       );
     }
 
@@ -54,6 +58,7 @@ class PlayerLayoutScale {
         sectionSpacing: 38,
         timelineBottomSpacing: 24,
         transportGap: 24,
+        titleSize: 44,
       );
     }
 
@@ -65,6 +70,7 @@ class PlayerLayoutScale {
       sectionSpacing: 30,
       timelineBottomSpacing: 20,
       transportGap: 18,
+      titleSize: 36,
     );
   }
 }

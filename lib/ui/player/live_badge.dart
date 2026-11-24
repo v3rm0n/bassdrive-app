@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme_tokens.dart';
 
+/// Studio on-air lamp. Red and lit while the live stream plays.
 class LiveBadge extends StatelessWidget {
   const LiveBadge({
     super.key,
@@ -14,21 +15,21 @@ class LiveBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = isPlaying ? 'LIVE' : (isReadyState ? 'READY' : 'PAUSED');
+    final label = isPlaying ? 'On air' : (isReadyState ? 'Ready' : 'Paused');
+    final lamp = isPlaying ? AppColors.onAir : AppColors.textMuted;
 
     return AnimatedContainer(
       duration: AppMotion.quick,
       curve: AppMotion.entranceCurve,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
+        vertical: 6,
       ),
       decoration: BoxDecoration(
-        color: isPlaying ? AppColors.error : AppColors.cyanStrong,
-        borderRadius: BorderRadius.circular(AppRadii.pill),
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.16),
-          width: 1,
+          color: isPlaying ? AppColors.onAir : AppColors.outlineStrong,
         ),
       ),
       child: Row(
@@ -37,16 +38,27 @@ class LiveBadge extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: lamp,
               shape: BoxShape.circle,
+              boxShadow: isPlaying
+                  ? [
+                      BoxShadow(
+                        color: AppColors.onAir.withValues(alpha: 0.7),
+                        blurRadius: 8,
+                      ),
+                    ]
+                  : null,
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: isPlaying
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
                 ),
           ),
         ],

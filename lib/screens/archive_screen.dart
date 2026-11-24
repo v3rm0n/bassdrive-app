@@ -25,6 +25,16 @@ class ArchiveScreen extends StatefulWidget {
 
 class _ArchiveScreenState extends State<ArchiveScreen>
     with SingleTickerProviderStateMixin {
+  static const _weekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -33,7 +43,15 @@ class _ArchiveScreenState extends State<ArchiveScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: widget.archive.length, vsync: this);
+    // Open on today's shows: the archive is organised by the weekday they air.
+    final days = widget.archive.keys.toList();
+    final today = _weekdays[DateTime.now().weekday - 1];
+    final todayIndex = days.indexOf(today);
+    _tabController = TabController(
+      length: widget.archive.length,
+      vsync: this,
+      initialIndex: todayIndex < 0 ? 0 : todayIndex,
+    );
   }
 
   @override
@@ -84,22 +102,27 @@ class _ArchiveScreenState extends State<ArchiveScreen>
                 controller: _tabController,
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                tabs:
-                    days.map((day) => Tab(text: day.substring(0, 3))).toList(),
+                tabs: days
+                    .map((day) => Tab(
+                          text: day.substring(0, 3),
+                          height: 44,
+                        ))
+                    .toList(),
               ),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search shows...',
+                hintText: 'Search all shows',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
+                        tooltip: 'Clear search',
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -109,12 +132,6 @@ class _ArchiveScreenState extends State<ArchiveScreen>
                         },
                       )
                     : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: theme.colorScheme.surface,
               ),
               onChanged: (value) {
                 setState(() {
@@ -140,19 +157,9 @@ class _ArchiveScreenState extends State<ArchiveScreen>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.search_off,
-                                size: 64,
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.3),
-                              ),
-                              const SizedBox(height: 16),
                               Text(
-                                'No shows found',
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.5),
-                                ),
+                                'No shows on $day',
+                                style: theme.textTheme.bodyLarge,
                               ),
                             ],
                           ),
@@ -160,7 +167,7 @@ class _ArchiveScreenState extends State<ArchiveScreen>
                       }
 
                       return ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.only(bottom: 16),
                         itemCount: filteredShows.length,
                         itemBuilder: (context, index) {
                           final show = filteredShows[index];
@@ -199,24 +206,14 @@ class _ArchiveScreenState extends State<ArchiveScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
             Text(
-              'No shows found',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
+              'No shows match "$_searchQuery"',
+              style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'Try a different search term',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
+              'Search by show or DJ name.',
+              style: theme.textTheme.bodyMedium,
             ),
           ],
         ),
@@ -224,7 +221,7 @@ class _ArchiveScreenState extends State<ArchiveScreen>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(bottom: 16),
       itemCount: results.length,
       itemBuilder: (context, index) {
         final entry = results[index];
@@ -232,7 +229,7 @@ class _ArchiveScreenState extends State<ArchiveScreen>
         final show = entry.value;
         return ShowListItem(
           show: show,
-          dayLabel: day.substring(0, 3),
+          dayLabel: day,
           onTap: () {
             Navigator.push(
               context,

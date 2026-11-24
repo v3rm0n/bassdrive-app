@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
+import '../ui/player/player_primitives.dart';
+import '../ui/theme/app_theme_tokens.dart';
 
 class LiveStreamScreen extends StatelessWidget {
   final AudioPlayerService playerService;
@@ -18,221 +20,149 @@ class LiveStreamScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bool isLivePlaying = playerService.isLive && playerService.isPlaying;
-    final bool isArchivePlaying =
-        playerService.currentEpisode != null && !playerService.isLive;
+    final bool isLivePaused = playerService.isLive && !playerService.isPlaying;
+    final episode = playerService.isLive ? null : playerService.currentEpisode;
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              GestureDetector(
-                onLongPress: () => _showDeveloperMenu(context),
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.secondary,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                        blurRadius: 30,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child:
-                      const Icon(Icons.radio, size: 100, color: Colors.white),
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 720;
+            final speakerSize = (constraints.maxHeight * 0.4)
+                .clamp(180.0, wide ? 380.0 : 300.0)
+                .toDouble();
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: wide ? AppSpacing.xxl : AppSpacing.lg,
+                vertical: AppSpacing.lg,
               ),
-              const SizedBox(height: 40),
-              Text(
-                'Bassdrive Live',
-                style: theme.textTheme.displayMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '24/7 Drum & Bass Radio',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.primary,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - AppSpacing.lg * 2,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isLivePlaying
-                      ? Colors.green.withValues(alpha: 0.2)
-                      : theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isLivePlaying)
-                      Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    Text(
-                      isLivePlaying
-                          ? 'LIVE'
-                          : isArchivePlaying
-                              ? 'ARCHIVE PLAYING'
-                              : 'READY',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isLivePlaying
-                            ? Colors.green
-                            : isArchivePlaying
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.5,
-                                  ),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              if (playerService.hasError)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 24),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline, color: theme.colorScheme.error),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          playerService.error ?? 'An error occurred',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.error,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Bassdrive',
+                          style: AppTypography.display(
+                            size: wide ? 88 : 64,
+                            weight: FontWeight.w900,
+                            height: 0.85,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (isArchivePlaying) ...[
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.music_note,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Currently Playing Archive',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Worldwide drum & bass, live around the clock.',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        Center(
+                          child: GestureDetector(
+                            onLongPress: () => _showDeveloperMenu(context),
+                            child: SizedBox(
+                              width: speakerSize,
+                              height: speakerSize + AppSpacing.md,
+                              child: Stack(
+                                alignment: Alignment.topCenter,
+                                children: [
+                                  SpeakerCone(
+                                    size: speakerSize,
+                                    isPlaying: isLivePlaying,
+                                    accent: AppColors.onAir,
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    child: LiveBadge(
+                                      isPlaying: isLivePlaying,
+                                      isReadyState: !playerService.isLive,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              playerService.currentEpisode?.displayName ??
-                                  'Unknown',
-                              style: theme.textTheme.bodySmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: AppSpacing.xl),
+                        if (playerService.hasError)
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: AppColors.error, size: 20),
+                                const SizedBox(width: AppSpacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    playerService.error ??
+                                        'Playback stopped. Try again.',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (episode != null)
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'You\'re listening to an archived show',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  episode.title,
+                                  style: theme.textTheme.titleMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: isLivePlaying
+                              ? OutlinedButton.icon(
+                                  onPressed: playerService.pause,
+                                  icon: const Icon(Icons.pause),
+                                  label: const Text('Pause live stream'),
+                                )
+                              : ElevatedButton.icon(
+                                  onPressed: isLivePaused
+                                      ? playerService.togglePlayPause
+                                      : () => playerService
+                                          .playLiveStream(liveStreamUrl),
+                                  icon: const Icon(Icons.play_arrow),
+                                  label: Text(
+                                    episode != null
+                                        ? 'Switch to live'
+                                        : 'Listen live',
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton.icon(
-                    onPressed: () =>
-                        playerService.playLiveStream(liveStreamUrl),
-                    icon: const Icon(Icons.radio, size: 28),
-                    label: const Text(
-                      'Switch to Live Stream',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
-              ] else if (!isLivePlaying)
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton.icon(
-                    onPressed: () =>
-                        playerService.playLiveStream(liveStreamUrl),
-                    icon: const Icon(Icons.play_arrow, size: 28),
-                    label: const Text(
-                      'Start Listening',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
-                )
-              else
-                const SizedBox(width: double.infinity, height: 56),
-              const SizedBox(height: 40),
-            ],
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -331,7 +261,7 @@ class LiveStreamScreen extends StatelessWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.error,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.onSignal,
             ),
             child: const Text('Clear Everything'),
           ),

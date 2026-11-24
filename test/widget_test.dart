@@ -63,7 +63,7 @@ void main() {
     );
 
     final MaterialApp app = tester.widget(find.byType(MaterialApp));
-    expect(app.theme?.colorScheme.primary, AppColors.cyanStrong);
+    expect(app.theme?.colorScheme.primary, AppColors.signal);
     expect(app.theme?.scaffoldBackgroundColor, AppColors.background);
   });
 
