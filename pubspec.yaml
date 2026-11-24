@@ -85,6 +85,9 @@ flutter:
   assets:
     - assets/icon/icon.png
     - assets/icon/icon_foreground.png
+    # Bundled so text renders correctly offline; google_fonts picks these up
+    # by filename instead of fetching over HTTP.
+    - assets/google_fonts/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

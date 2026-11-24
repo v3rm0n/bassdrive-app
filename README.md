@@ -19,6 +19,8 @@ A cross-platform application for listening to Bassdrive Internet radio and archi
   <img src="/screenshots/IMAGE4.PNG" width="24%" />
 </p>
 
+<img src="/screenshots/DESKTOP.PNG" width="98%" />
+
 ## Features
 
 - **Live Stream**: Listen to Bassdrive's 24/7 Drum & Bass radio stream

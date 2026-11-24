@@ -2,7 +2,13 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class PlatformUtils {
+  /// Forces the desktop or mobile layout, for tests and screenshots.
+  @visibleForTesting
+  static bool? debugIsDesktopOverride;
+
   static bool get isDesktop {
+    final override = debugIsDesktopOverride;
+    if (override != null) return override;
     if (kIsWeb) return false;
     return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
   }

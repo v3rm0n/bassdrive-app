@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../ui/theme/app_theme_tokens.dart';
 import '../ui/theme/component_theme_extensions.dart';
 import '../utils/platform_utils.dart';
+import 'readable_width.dart';
 
 class NavigationItem {
   final IconData icon;
@@ -132,7 +133,7 @@ class _DesktopLayout extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(child: content),
+          Expanded(child: ReadableWidth(child: content)),
         ],
       ),
     );
