@@ -186,6 +186,9 @@ final downloads = DownloadService();
 - Desktop content is capped to a 960px column (`lib/widgets/readable_width.dart`)
 - Material 3 enabled
 
+### App Icon
+The icon is the player's speaker cone, drawn by `tool/app_icon/render_icon.swift`. Edit that, then run `tool/app_icon/generate.sh` (macOS + ImageMagick) to regenerate every platform's icon. macOS gets its own squircle with margin and shadow; don't resize the square `assets/icon/icon.png` into the macOS asset catalog.
+
 ### README Screenshots
 Regenerate `screenshots/` with:
 
