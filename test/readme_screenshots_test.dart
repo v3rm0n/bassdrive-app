@@ -13,6 +13,7 @@ import 'package:bassdrive_radio/services/api_service.dart';
 import 'package:bassdrive_radio/services/audio_player_service.dart';
 import 'package:bassdrive_radio/services/storage_service.dart';
 import 'package:bassdrive_radio/utils/platform_utils.dart';
+import 'package:bassdrive_radio/ui/theme/app_theme_tokens.dart';
 import 'package:bassdrive_radio/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -115,6 +116,11 @@ void main() {
   setUpAll(() async {
     GoogleFonts.config.allowRuntimeFetching = false;
     await _loadIcons();
+    // Load every bundled font before the first frame. Text laid out before
+    // its font arrives keeps the placeholder test font (solid boxes).
+    AppTheme.darkTheme;
+    AppTypography.display(size: 64, weight: FontWeight.w900);
+    await GoogleFonts.pendingFonts();
   });
 
   setUp(() async {

@@ -45,11 +45,12 @@ class LiveStreamScreen extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 560),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Bassdrive',
+                          textAlign: TextAlign.center,
                           style: AppTypography.display(
                             size: wide ? 88 : 64,
                             weight: FontWeight.w900,
@@ -59,6 +60,7 @@ class LiveStreamScreen extends StatelessWidget {
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           'Worldwide drum & bass, live around the clock.',
+                          textAlign: TextAlign.center,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -96,12 +98,13 @@ class LiveStreamScreen extends StatelessWidget {
                             padding:
                                 const EdgeInsets.only(bottom: AppSpacing.md),
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Icon(Icons.error_outline,
                                     color: AppColors.error, size: 20),
                                 const SizedBox(width: AppSpacing.xs),
-                                Expanded(
+                                Flexible(
                                   child: Text(
                                     playerService.error ??
                                         'Playback stopped. Try again.',
@@ -118,7 +121,6 @@ class LiveStreamScreen extends StatelessWidget {
                             padding:
                                 const EdgeInsets.only(bottom: AppSpacing.md),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'You\'re listening to an archived show',
