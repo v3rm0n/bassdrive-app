@@ -181,9 +181,17 @@ final downloads = DownloadService();
 
 ### Theme
 - Dark theme only
-- Cyan-accent palette
-- Inter font via Google Fonts
+- Aubergine surfaces, amp-yellow actions, on-air red for live state (`lib/ui/theme/app_theme_tokens.dart`)
+- Big Shoulders (display) and Instrument Sans (UI), bundled in `assets/google_fonts/`; runtime font fetching is disabled so the app renders the same offline. Adding a weight means adding its file there (named `Family-Weight.ttf`, e.g. `InstrumentSans-SemiBold.ttf`)
+- Desktop content is capped to a 960px column (`lib/widgets/readable_width.dart`)
 - Material 3 enabled
+
+### README Screenshots
+Regenerate `screenshots/` with:
+
+```bash
+flutter test test/readme_screenshots_test.dart --update-goldens --dart-define=SCREENSHOTS=true
+```
 
 ---
 

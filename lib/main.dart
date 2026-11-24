@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/api_response.dart';
 import 'models/listening_progress.dart';
@@ -19,6 +22,16 @@ import 'screens/live_stream_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Fonts ship with the app so it looks the same without a connection.
+  GoogleFonts.config.allowRuntimeFetching = false;
+  LicenseRegistry.addLicense(() async* {
+    for (final family in ['BigShoulders', 'InstrumentSans']) {
+      final license =
+          await rootBundle.loadString('assets/google_fonts/$family-OFL.txt');
+      yield LicenseEntryWithLineBreaks(<String>['google_fonts'], license);
+    }
+  });
 
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.bassdrive.radio.channel.audio',

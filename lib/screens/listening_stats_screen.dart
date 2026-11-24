@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../ui/theme/app_theme_tokens.dart';
+import '../widgets/readable_width.dart';
 import '../services/storage_service.dart';
 
 class ListeningStatsScreen extends StatefulWidget {
@@ -109,72 +110,77 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
     final theme = Theme.of(context);
     final totalTime = _liveStreamTime + _archivesTime;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Listening stats'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadStats,
+    return ColoredBox(
+      color: AppColors.background,
+      child: ReadableWidth(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Listening stats'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _loadStats,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: _resetStats,
+                tooltip: 'Reset statistics',
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: _resetStats,
-            tooltip: 'Reset statistics',
-          ),
-        ],
+          body: _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadStats,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                    children: [
+                      Text('Time listened', style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatDuration(totalTime),
+                        style: AppTypography.display(size: 72, height: 1),
+                      ),
+                      Text(
+                        _formatDurationDetailed(totalTime),
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 32),
+                      _SplitBar(
+                        live: _liveStreamTime,
+                        archive: _archivesTime,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildTimeCard(
+                        context,
+                        icon: Icons.radio,
+                        title: 'Live stream',
+                        duration: _liveStreamTime,
+                        color: AppColors.onAir,
+                        total: totalTime,
+                      ),
+                      _buildTimeCard(
+                        context,
+                        icon: Icons.library_music,
+                        title: 'Archived shows',
+                        duration: _archivesTime,
+                        color: AppColors.signal,
+                        total: totalTime,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Time counts while audio plays and is stored only on this device.',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+        ),
       ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: theme.colorScheme.primary,
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadStats,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                children: [
-                  Text('Time listened', style: theme.textTheme.bodyMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatDuration(totalTime),
-                    style: AppTypography.display(size: 72, height: 1),
-                  ),
-                  Text(
-                    _formatDurationDetailed(totalTime),
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 32),
-                  _SplitBar(
-                    live: _liveStreamTime,
-                    archive: _archivesTime,
-                  ),
-                  const SizedBox(height: 8),
-                  _buildTimeCard(
-                    context,
-                    icon: Icons.radio,
-                    title: 'Live stream',
-                    duration: _liveStreamTime,
-                    color: AppColors.onAir,
-                    total: totalTime,
-                  ),
-                  _buildTimeCard(
-                    context,
-                    icon: Icons.library_music,
-                    title: 'Archived shows',
-                    duration: _archivesTime,
-                    color: AppColors.signal,
-                    total: totalTime,
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Time counts while audio plays and is stored only on this device.',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
     );
   }
 
