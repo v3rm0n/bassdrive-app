@@ -13,6 +13,7 @@ class PlayerViewState {
     required this.subtitle,
     required this.position,
     required this.duration,
+    this.detail,
   });
 
   final bool isPlaying;
@@ -21,6 +22,9 @@ class PlayerViewState {
   final bool hasContent;
   final String title;
   final String subtitle;
+
+  /// Secondary line under the subtitle, such as the broadcast date.
+  final String? detail;
   final Duration position;
   final Duration duration;
 
@@ -29,19 +33,23 @@ class PlayerViewState {
   bool get canSeek => duration > Duration.zero;
 
   factory PlayerViewState.fromService(AudioPlayerService service) {
-    final hasContent = service.isLive || service.currentEpisode != null;
+    final episode = service.currentEpisode;
+    final hasContent = service.isLive || episode != null;
 
-    final title = hasContent
-        ? (service.isLive
-            ? 'Bassdrive Live'
-            : (service.currentEpisode?.displayName ?? 'Bassdrive'))
-        : 'Bassdrive';
-
-    final subtitle = hasContent
-        ? (service.isLive
-            ? '24/7 Drum & Bass Radio'
-            : (service.currentEpisode?.show ?? 'Ready to Play'))
-        : 'Ready to Play';
+    final String title;
+    final String subtitle;
+    String? detail;
+    if (service.isLive) {
+      title = 'Bassdrive live';
+      subtitle = 'Worldwide drum & bass, around the clock';
+    } else if (episode != null) {
+      title = episode.title;
+      subtitle = episode.show;
+      detail = episode.dateLabel;
+    } else {
+      title = 'Bassdrive';
+      subtitle = 'Press play to tune in to the live stream';
+    }
 
     return PlayerViewState(
       isPlaying: service.isPlaying,
@@ -50,6 +58,7 @@ class PlayerViewState {
       hasContent: hasContent,
       title: title,
       subtitle: subtitle,
+      detail: detail,
       position: service.position,
       duration: service.duration,
     );

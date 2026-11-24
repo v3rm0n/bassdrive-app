@@ -255,7 +255,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                                 )
                               : null,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -278,7 +278,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Sort by',
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16,
@@ -317,7 +317,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'Filter by show',
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 16,

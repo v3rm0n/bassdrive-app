@@ -5,6 +5,7 @@ import '../models/show.dart';
 import '../services/download_service.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
+import '../ui/theme/app_theme_tokens.dart';
 
 // Re-export DownloadType for convenience
 export '../services/download_service.dart' show DownloadType;
@@ -17,6 +18,9 @@ class EpisodeListItem extends StatefulWidget {
   final VoidCallback? onOpenPlayer;
   final Widget? trailing;
 
+  /// Whether to repeat the show name under the title. Off inside a show page.
+  final bool showShowName;
+
   const EpisodeListItem({
     super.key,
     required this.episode,
@@ -25,6 +29,7 @@ class EpisodeListItem extends StatefulWidget {
     required this.storageService,
     this.onOpenPlayer,
     this.trailing,
+    this.showShowName = true,
   });
 
   @override
@@ -121,89 +126,89 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
 
     switch (status) {
       case DownloadStatus.downloaded:
-        return IconButton(
-          icon: const Icon(Icons.download_done),
-          iconSize: 24,
-          color: theme.colorScheme.primary,
-          onPressed: null, // Already downloaded
+        return const IconButton(
+          icon: Icon(Icons.download_done),
+          tooltip: 'Downloaded',
+          color: AppColors.signal,
+          disabledColor: AppColors.signal,
+          onPressed: null,
         );
       case DownloadStatus.downloading:
-        return SizedBox(
-          width: 40,
-          height: 40,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CircularProgressIndicator(
-                value: progress,
-                strokeWidth: 2,
-                color: theme.colorScheme.primary,
+        return Tooltip(
+          message: 'Downloading ${(progress * 100).toInt()}%',
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 2,
+                  backgroundColor: AppColors.outline,
+                ),
               ),
-              Text(
-                '${(progress * 100).toInt()}%',
-                style: theme.textTheme.bodySmall?.copyWith(fontSize: 8),
-              ),
-            ],
+            ),
           ),
         );
       case DownloadStatus.error:
         return IconButton(
           icon: const Icon(Icons.error_outline),
-          iconSize: 24,
-          color: Colors.red,
+          tooltip: 'Download failed. Retry',
+          color: AppColors.error,
           onPressed: _downloadEpisode,
         );
       case DownloadStatus.notDownloaded:
         return IconButton(
           icon: const Icon(Icons.download_outlined),
-          iconSize: 24,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+          tooltip: 'Download',
+          color: AppColors.textMuted,
           onPressed: _downloadEpisode,
         );
     }
   }
 
+  Widget _leading({required bool isPlaying, required bool isCompleted}) {
+    final date = widget.episode.date;
+    final Widget child;
+    if (isPlaying) {
+      child = const Icon(Icons.graphic_eq, color: AppColors.signal);
+    } else if (date != null) {
+      child = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '${date.day}',
+            style: AppTypography.display(
+              size: 24,
+              height: 1,
+              color: isCompleted ? AppColors.textMuted : AppColors.textPrimary,
+            ),
+          ),
+          Text(
+            '${Episode.monthNames[date.month - 1].substring(0, 3)} '
+            "'${(date.year % 100).toString().padLeft(2, '0')}",
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ],
+      );
+    } else {
+      child = const Icon(Icons.music_note, color: AppColors.textMuted);
+    }
+    return SizedBox(width: 48, height: 48, child: Center(child: child));
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Check if this episode is loaded in the player (regardless of playing/paused state)
     final isCurrentEpisode =
         widget.playerService.currentEpisode?.id == widget.episode.id;
     final isCurrentlyPlaying =
         isCurrentEpisode && widget.playerService.isPlaying;
 
-    if (_isLoading) {
-      return ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            Icons.music_note,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-          ),
-        ),
-        title: Text(
-          widget.episode.displayName,
-          style: theme.textTheme.bodyLarge,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          widget.episode.show,
-          style: theme.textTheme.bodySmall,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      );
-    }
-
-    // Use player's real-time position/duration when this is the current episode
-    // AND we have valid duration from the player
+    // Use the player's live position for the loaded episode, stored progress
+    // for everything else.
     ListeningProgress? progress;
     if (isCurrentEpisode && widget.playerService.duration > Duration.zero) {
       progress = ListeningProgress(
@@ -215,134 +220,103 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         lastPlayed: DateTime.now(),
       );
     } else {
-      // Use stored progress for previously played items
-      progress = _progress;
+      progress = _isLoading ? null : _progress;
     }
 
-    // Show progress indicator if we have position data and it's not completed
-    // Show if position > 0 (not just > 10s) to always show progress for played items
     final isCompleted = progress?.isCompleted ?? false;
     final hasProgress =
         progress != null && progress.position > Duration.zero && !isCompleted;
-
-    // Calculate display percentage - use stored percentage if available, otherwise calculate
-    // If we have position but no duration, we can't show percentage but we still show progress exists
     final progressPercentage =
         (progress?.duration != null && progress!.duration!.inMilliseconds > 0)
             ? progress.progressPercentage
             : 0.0;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: isCurrentlyPlaying
-              ? theme.colorScheme.primary.withValues(alpha: 0.2)
-              : theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          isCurrentlyPlaying
-              ? Icons.equalizer
-              : isCompleted
-                  ? Icons.check_circle
-                  : Icons.music_note,
-          color: isCurrentlyPlaying
-              ? theme.colorScheme.primary
-              : isCompleted
-                  ? Colors.green
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-        ),
-      ),
-      title: Text(
-        widget.episode.displayName,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: isCurrentlyPlaying ? FontWeight.w600 : FontWeight.normal,
-          color: isCurrentlyPlaying ? theme.colorScheme.primary : null,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.episode.show,
-                  style: theme.textTheme.bodySmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (isCompleted) ...[
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.check_circle,
-                  size: 14,
-                  color: Colors.green,
-                ),
-              ],
-              // Download indicator
-              if (_downloadService.isDownloaded(widget.episode.id)) ...[
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.download_done,
-                  size: 14,
-                  color: theme.colorScheme.primary,
-                ),
-              ],
-            ],
-          ),
-          if (hasProgress) ...[
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: progressPercentage,
-                      backgroundColor: theme.dividerColor,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        theme.colorScheme.primary,
-                      ),
-                      minHeight: 3,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${(progressPercentage * 100).toInt()}%',
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-      trailing: widget.trailing ??
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Download button
-              _buildDownloadButton(theme),
-              IconButton(
-                icon: Icon(
-                  _isFavourite ? Icons.favorite : Icons.favorite_border,
-                ),
-                iconSize: 24,
-                color: _isFavourite
-                    ? Colors.red
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                onPressed: _toggleFavourite,
-              ),
-            ],
-          ),
+    final notes = [
+      if (widget.showShowName) widget.episode.show,
+      if (isCompleted) 'Played',
+      if (hasProgress && progressPercentage > 0)
+        '${(progressPercentage * 100).toInt()}% played',
+    ];
+
+    return InkWell(
       onTap: _playEpisode,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xs,
+          AppSpacing.sm,
+          AppSpacing.xxs,
+          AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isCurrentEpisode ? AppColors.surface : null,
+          border: const Border(bottom: BorderSide(color: AppColors.outline)),
+        ),
+        child: Row(
+          children: [
+            _leading(
+              isPlaying: isCurrentlyPlaying,
+              isCompleted: isCompleted,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.episode.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: isCurrentEpisode
+                          ? AppColors.signal
+                          : isCompleted
+                              ? AppColors.textSecondary
+                              : AppColors.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (notes.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      notes.join(', '),
+                      style: theme.textTheme.bodySmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (hasProgress) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: progressPercentage,
+                        minHeight: 3,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            widget.trailing ??
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildDownloadButton(theme),
+                    IconButton(
+                      icon: Icon(
+                        _isFavourite ? Icons.favorite : Icons.favorite_border,
+                      ),
+                      tooltip: _isFavourite
+                          ? 'Remove from favourites'
+                          : 'Add to favourites',
+                      color:
+                          _isFavourite ? AppColors.signal : AppColors.textMuted,
+                      onPressed: _toggleFavourite,
+                    ),
+                  ],
+                ),
+          ],
+        ),
+      ),
     );
   }
 }

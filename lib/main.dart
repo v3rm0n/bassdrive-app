@@ -9,7 +9,6 @@ import 'services/audio_player_service.dart';
 import 'services/download_service.dart';
 import 'services/storage_service.dart';
 import 'ui/theme/app_theme_tokens.dart';
-import 'ui/theme/component_theme_extensions.dart';
 import 'utils/theme.dart';
 import 'widgets/adaptive_navigation.dart';
 import 'widgets/full_player.dart';
@@ -182,54 +181,41 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
 
     if (_isLoading) {
-      return _ChromeStatusScaffold(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: theme.colorScheme.primary),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Booting broadcast console...',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Loading live stream and archive signal.',
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ),
+      return _StatusScaffold(
+        children: [
+          const SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Tuning in', style: theme.textTheme.displaySmall),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Loading the live stream and show archive.',
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
       );
     }
 
-    return _ChromeStatusScaffold(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.portable_wifi_off, size: 56, color: AppColors.error),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Signal lost',
-            style: theme.textTheme.displaySmall?.copyWith(
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Check your connection and try again. Offline episodes are available in Downloads.',
-            style: theme.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ElevatedButton.icon(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Re-sync'),
-          ),
-        ],
-      ),
+    return _StatusScaffold(
+      children: [
+        const Icon(Icons.wifi_off_rounded, size: 32, color: AppColors.error),
+        const SizedBox(height: AppSpacing.lg),
+        Text("Can't reach Bassdrive", style: theme.textTheme.displaySmall),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Check your connection and try again. Downloaded episodes still play offline.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ElevatedButton.icon(
+          onPressed: _loadData,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Try again'),
+        ),
+      ],
     );
   }
 
@@ -321,96 +307,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _ChromeStatusScaffold extends StatelessWidget {
-  const _ChromeStatusScaffold({required this.child});
+class _StatusScaffold extends StatelessWidget {
+  const _StatusScaffold({required this.children});
 
-  final Widget child;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cardTheme =
-        theme.extension<BroadcastCardTheme>() ?? BroadcastCardTheme.console();
-
     return Scaffold(
-      body: Stack(
-        children: [
-          const _StatusBackdrop(),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 540),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: cardTheme.background.withValues(alpha: 0.86),
-                    borderRadius: BorderRadius.circular(cardTheme.radius),
-                    border: Border.all(color: cardTheme.border),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cardTheme.glow.withValues(alpha: 0.18),
-                        blurRadius: 20,
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: cardTheme.padding,
-                    child: child,
-                  ),
-                ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusBackdrop extends StatelessWidget {
-  const _StatusBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.surface, AppColors.background],
         ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            left: -80,
-            top: -120,
-            child: IgnorePointer(
-              child: Container(
-                width: 320,
-                height: 320,
-                decoration: BoxDecoration(
-                  color: AppColors.cyanGlow.withValues(alpha: 0.16),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: -70,
-            bottom: -110,
-            child: IgnorePointer(
-              child: Container(
-                width: 260,
-                height: 260,
-                decoration: BoxDecoration(
-                  color: AppColors.outlineStrong.withValues(alpha: 0.16),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../models/show.dart';
+import '../ui/theme/app_theme_tokens.dart';
 
 class ShowListItem extends StatelessWidget {
   final Show show;
@@ -16,60 +18,94 @@ class ShowListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final count = show.episodes.length;
+    final latest = show.episodes.isEmpty ? null : show.episodes.first.dateLabel;
+    final details = [
+      if (dayLabel != null) dayLabel!,
+      '$count ${count == 1 ? 'episode' : 'episodes'}',
+      if (latest != null) 'latest $latest',
+    ].join(', ');
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                theme.colorScheme.primary.withValues(alpha: 0.3),
-                theme.colorScheme.secondary.withValues(alpha: 0.3),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(Icons.podcasts, color: theme.colorScheme.primary),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
-        title: Text(
-          show.name,
-          style: theme.textTheme.titleLarge,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.outline)),
         ),
-        subtitle: Row(
+        child: Row(
           children: [
-            Text(
-              '${show.episodes.length} episodes',
-              style: theme.textTheme.bodySmall,
-            ),
-            if (dayLabel != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  dayLabel!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+            ShowMonogram(name: show.name, size: 48),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    show.name,
+                    style: theme.textTheme.titleMedium,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    details,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            const Icon(Icons.chevron_right, color: AppColors.textMuted),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// Two-letter mark for a show, cut from its name like a record-label stamp.
+class ShowMonogram extends StatelessWidget {
+  const ShowMonogram({super.key, required this.name, required this.size});
+
+  final String name;
+  final double size;
+
+  static String initialsFor(String name) {
+    const skip = {'the', 'a', 'an', 'with', 'and', '&', '-', 'show'};
+    final words = name
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty && !skip.contains(w.toLowerCase()))
+        .toList();
+    if (words.isEmpty) return name.isEmpty ? '?' : name[0].toUpperCase();
+    final letters = words.take(2).map((w) => w.characters.first.toUpperCase());
+    return letters.join();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceRaised,
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
+        child: Text(
+          initialsFor(name),
+          style: AppTypography.display(
+            size: size * 0.5,
+            color: AppColors.signal,
+            height: 1,
+          ),
+        ),
       ),
     );
   }

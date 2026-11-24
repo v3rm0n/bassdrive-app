@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme_tokens.dart';
-import '../theme/component_theme_extensions.dart';
 import 'player_layout_scale.dart';
 
 class TrackMetaBlock extends StatelessWidget {
@@ -10,28 +9,29 @@ class TrackMetaBlock extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.scale,
+    this.detail,
     this.align = TextAlign.center,
   });
 
   final String title;
   final String subtitle;
+  final String? detail;
   final PlayerLayoutScale scale;
   final TextAlign align;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headerTheme =
-        theme.extension<SectionHeaderTheme>() ?? SectionHeaderTheme.console();
+    final crossAxis = align == TextAlign.center
+        ? CrossAxisAlignment.center
+        : CrossAxisAlignment.start;
 
     return Column(
+      crossAxisAlignment: crossAxis,
       children: [
         Text(
           title,
-          style: theme.textTheme.displaySmall?.copyWith(
-            color: headerTheme.titleColor,
-            height: 1.1,
-          ),
+          style: AppTypography.display(size: scale.titleSize),
           textAlign: align,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -40,22 +40,20 @@ class TrackMetaBlock extends StatelessWidget {
         Text(
           subtitle,
           style: theme.textTheme.titleLarge?.copyWith(
-            color: headerTheme.subtitleColor,
-            height: 1.2,
+            color: AppColors.signal,
           ),
           textAlign: align,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          width: 120,
-          height: 2,
-          decoration: BoxDecoration(
-            color: headerTheme.ruleColor,
-            borderRadius: BorderRadius.circular(AppRadii.pill),
+        if (detail != null) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            detail!,
+            style: theme.textTheme.bodyMedium,
+            textAlign: align,
           ),
-        ),
+        ],
       ],
     );
   }

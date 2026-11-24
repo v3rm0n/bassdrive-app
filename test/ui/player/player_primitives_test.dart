@@ -13,7 +13,7 @@ void main() {
     expect(tablet.heroSize, lessThan(desktop.heroSize));
   });
 
-  testWidgets('LiveBadge renders READY state when idle', (tester) async {
+  testWidgets('LiveBadge renders ready state when idle', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.darkTheme,
@@ -25,7 +25,7 @@ void main() {
       ),
     );
 
-    expect(find.text('READY'), findsOneWidget);
+    expect(find.text('Ready'), findsOneWidget);
   });
 
   testWidgets('TimelineProgressRow hides for live playback', (tester) async {

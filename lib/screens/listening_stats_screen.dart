@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../ui/theme/app_theme_tokens.dart';
 import '../services/storage_service.dart';
 
 class ListeningStatsScreen extends StatefulWidget {
@@ -42,7 +44,7 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Statistics'),
+        title: const Text('Reset listening stats?'),
         content: const Text(
           'Are you sure you want to reset all listening statistics? This action cannot be undone.',
         ),
@@ -109,7 +111,7 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Listening Statistics'),
+        title: const Text('Listening stats'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -131,104 +133,44 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
           : RefreshIndicator(
               onRefresh: _loadStats,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 children: [
-                  // Total Time Card
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.headphones,
-                            size: 48,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Total Listening Time',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.7),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _formatDuration(totalTime),
-                            style: theme.textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _formatDurationDetailed(totalTime),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Breakdown Section
+                  Text('Time listened', style: theme.textTheme.bodyMedium),
+                  const SizedBox(height: 4),
                   Text(
-                    'Breakdown',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    _formatDuration(totalTime),
+                    style: AppTypography.display(size: 72, height: 1),
                   ),
-                  const SizedBox(height: 12),
-                  // Live Stream Card
+                  Text(
+                    _formatDurationDetailed(totalTime),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 32),
+                  _SplitBar(
+                    live: _liveStreamTime,
+                    archive: _archivesTime,
+                  ),
+                  const SizedBox(height: 8),
                   _buildTimeCard(
                     context,
                     icon: Icons.radio,
-                    title: 'Live Stream',
+                    title: 'Live stream',
                     duration: _liveStreamTime,
-                    color: theme.colorScheme.primary,
+                    color: AppColors.onAir,
                     total: totalTime,
                   ),
-                  const SizedBox(height: 12),
-                  // Archives Card
                   _buildTimeCard(
                     context,
                     icon: Icons.library_music,
-                    title: 'Archives',
+                    title: 'Archived shows',
                     duration: _archivesTime,
-                    color: theme.colorScheme.secondary,
+                    color: AppColors.signal,
                     total: totalTime,
                   ),
                   const SizedBox(height: 24),
-                  // Info text
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Listening time is tracked while audio is playing. Statistics are saved locally on your device.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    'Time counts while audio plays and is stored only on this device.',
+                    style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -249,66 +191,80 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
         ? (duration.inSeconds / total.inSeconds * 100).toStringAsFixed(1)
         : '0.0';
 
-    return Card(
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 28,
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.outline)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          const SizedBox(width: 12),
+          Icon(icon, size: 20, color: AppColors.textMuted),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(title, style: theme.textTheme.titleMedium),
+          ),
+          Text(
+            _formatDuration(duration),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontFeatures: AppTypography.tabular,
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 56,
+            child: Text(
+              '$percentage%',
+              textAlign: TextAlign.end,
+              style: theme.textTheme.labelMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One bar split between live and archive listening.
+class _SplitBar extends StatelessWidget {
+  const _SplitBar({required this.live, required this.archive});
+
+  final Duration live;
+  final Duration archive;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = live.inSeconds + archive.inSeconds;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: SizedBox(
+        height: 12,
+        child: total == 0
+            ? const ColoredBox(color: AppColors.outline)
+            : Row(
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  if (live.inSeconds > 0)
+                    Expanded(
+                      flex: live.inSeconds,
+                      child: const ColoredBox(color: AppColors.onAir),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatDurationDetailed(duration),
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
+                  if (live.inSeconds > 0 && archive.inSeconds > 0)
+                    const SizedBox(width: 2),
+                  if (archive.inSeconds > 0)
+                    Expanded(
+                      flex: archive.inSeconds,
+                      child: const ColoredBox(color: AppColors.signal),
                     ),
-                  ),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _formatDuration(duration),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$percentage%',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -45,5 +45,34 @@ class Episode {
     return null;
   }
 
+  /// The episode name without its leading `[yyyy.mm.dd]` date stamp.
+  String get title {
+    final stripped =
+        name.replaceFirst(RegExp(r'\[\d{4}\.\d{2}\.\d{2}\]'), '').trim();
+    return stripped.isEmpty ? name : stripped;
+  }
+
+  /// Broadcast date written out, such as "10 February 2026".
+  String? get dateLabel {
+    final d = date;
+    if (d == null) return null;
+    return '${d.day} ${monthNames[d.month - 1]} ${d.year}';
+  }
+
+  static const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
   String get id => encodedUrl;
 }
