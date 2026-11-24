@@ -81,6 +81,39 @@ void main() {
     expect(find.text('Choose an episode from Downloads'), findsOneWidget);
   });
 
+  testWidgets('live metadata refreshes on both live surfaces', (tester) async {
+    final api = _PendingApiService()
+      ..nowPlaying = 'First show - hosted by DJ A';
+    api._completer.complete(
+      ApiResponse(live: 'https://example.com/live', archive: {}),
+    );
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.darkTheme,
+      home: HomeScreen(
+        apiService: api,
+        playerService: _FakeAudioPlayerService(),
+        storageService: StorageService(),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text(api.nowPlaying!), findsOneWidget);
+
+    await tester.tap(find.text('Listen live'));
+    await tester.tap(find.text('Player'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bassdrive live'), findsOneWidget);
+    expect(find.text(api.nowPlaying!), findsOneWidget);
+
+    api.nowPlaying = 'Next show - hosted by DJ B';
+    await tester.pump(const Duration(minutes: 2));
+    expect(find.text(api.nowPlaying!), findsOneWidget);
+
+    api.nowPlaying = null;
+    await tester.pump(const Duration(minutes: 2));
+    expect(
+        find.text('Worldwide drum & bass, around the clock'), findsOneWidget);
+  });
+
   testWidgets(
       'selecting an episode in the archive opens its player and reopens it without restarting',
       (tester) async {
@@ -163,9 +196,13 @@ void main() {
 
 class _PendingApiService extends ApiService {
   final Completer<ApiResponse> _completer = Completer<ApiResponse>();
+  String? nowPlaying;
 
   @override
   Future<ApiResponse> fetchArchive() => _completer.future;
+
+  @override
+  Future<String?> fetchNowPlaying() async => nowPlaying;
 }
 
 class _FailingApiService extends ApiService {
@@ -189,7 +226,7 @@ class _FakeAudioPlayerService extends ChangeNotifier
   int episodeStarts = 0;
 
   @override
-  bool get isLive => false;
+  bool isLive = false;
 
   @override
   Duration get position => Duration.zero;
@@ -217,13 +254,18 @@ class _FakeAudioPlayerService extends ChangeNotifier
 
   @override
   Future<void> playEpisode(Episode episode, {Duration? startPosition}) async {
+    isLive = false;
     currentEpisode = episode;
     episodeStarts++;
     notifyListeners();
   }
 
   @override
-  Future<void> playLiveStream(String url) async {}
+  Future<void> playLiveStream(String url) async {
+    isLive = true;
+    currentEpisode = null;
+    notifyListeners();
+  }
 
   @override
   Future<void> seek(Duration position) async {}

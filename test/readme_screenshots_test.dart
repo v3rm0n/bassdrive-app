@@ -71,6 +71,9 @@ final _archive = {
 
 class _Api extends ApiService {
   @override
+  Future<String?> fetchNowPlaying() async => null;
+
+  @override
   Future<ApiResponse> fetchArchive() async =>
       ApiResponse(live: 'https://example.com/live', archive: _archive);
 }
