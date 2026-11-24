@@ -1,8 +1,10 @@
-[tools]
-flutter = { version = "3.47.8", platforms = """
-[linux-arm64]
-url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_arm64_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
+[tools.flutter]
+version = "3.47.8"
+url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/{{ os() }}/flutter_{{ os() }}{{ arch(x64="", arm64="_arm64") }}_{{ version | replace(from="-stable", to="") }}-stable.zip'
+version_list_url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json"
+version_json_path = ".releases[?channel=stable].version"
 
-[linux-x64]
-url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
-""", url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/{{ os() }}/flutter_{{ os() }}{{ arch(x64="", arm64="_arm64") }}_{{ version | replace(from="-stable", to="") }}-stable.zip', version_json_path = ".releases[?channel=stable].version", version_list_url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json" }
+# Linux builds ship as .tar.xz, not .zip.
+[tools.flutter.platforms]
+linux-x64 = { url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version | replace(from="-stable", to="") }}-stable.tar.xz' }
+linux-arm64 = { url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_arm64_{{ version | replace(from="-stable", to="") }}-stable.tar.xz' }
