@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:bassdrive_radio/main.dart';
 import 'package:bassdrive_radio/models/api_response.dart';
 import 'package:bassdrive_radio/models/episode.dart';
+import 'package:bassdrive_radio/models/archive_day.dart';
+import 'package:bassdrive_radio/models/show.dart';
+import 'package:bassdrive_radio/widgets/full_player.dart';
 import 'package:bassdrive_radio/services/api_service.dart';
 import 'package:bassdrive_radio/services/audio_player_service.dart';
 import 'package:bassdrive_radio/services/storage_service.dart';
@@ -37,6 +40,13 @@ void main() {
     expect(find.text('Booting broadcast console...'), findsOneWidget);
     expect(
         find.text('Loading live stream and archive signal.'), findsOneWidget);
+    await tester.tap(find.text('Downloads'));
+    await tester.pumpAndSettle();
+    expect(find.text('No Downloads'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    pendingApi._completer.completeError(Exception('late response'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('HomeScreen error state renders styled retry action', (
@@ -63,6 +73,49 @@ void main() {
     await tester.tap(find.text('Re-sync'));
     await tester.pump();
     expect(failingApi.fetchCallCount, 2);
+    await tester.tap(find.text('Downloads'));
+    await tester.pumpAndSettle();
+    expect(find.text('No Downloads'), findsOneWidget);
+    await tester.tap(find.text('Player'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose an episode from Downloads'), findsOneWidget);
+  });
+
+  testWidgets(
+      'selecting an episode in the archive opens its player and reopens it without restarting',
+      (tester) async {
+    final api = _PendingApiService();
+    final player = _FakeAudioPlayerService();
+    final mix = Episode(
+        name: 'Midnight mix',
+        show: 'Night shift',
+        url: 'https://example.com/mix',
+        encodedUrl: 'https://example.com/mix');
+    api._completer
+        .complete(ApiResponse(live: 'https://example.com/live', archive: {
+      'Monday': ArchiveDay(day: 'Monday', shows: [
+        Show(name: mix.show, episodes: [mix])
+      ])
+    }));
+    await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: HomeScreen(
+            apiService: api,
+            playerService: player,
+            storageService: StorageService())));
+    await tester.pumpAndSettle();
+
+    for (var selection = 0; selection < 2; selection++) {
+      await tester.tap(find.text('Archive'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(mix.show));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(mix.name));
+      await tester.pumpAndSettle();
+      expect(find.byType(FullPlayer), findsOneWidget);
+      expect(find.text(mix.name), findsOneWidget);
+      expect(player.episodeStarts, 1);
+    }
   });
 
   testWidgets('Desktop adaptive navigation highlights player destination', (
@@ -131,7 +184,9 @@ class _FakeAudioPlayerService extends ChangeNotifier
   PlayerState get state => PlayerState.idle;
 
   @override
-  Episode? get currentEpisode => null;
+  Episode? currentEpisode;
+
+  int episodeStarts = 0;
 
   @override
   bool get isLive => false;
@@ -161,7 +216,11 @@ class _FakeAudioPlayerService extends ChangeNotifier
   Future<void> play() async {}
 
   @override
-  Future<void> playEpisode(Episode episode, {Duration? startPosition}) async {}
+  Future<void> playEpisode(Episode episode, {Duration? startPosition}) async {
+    currentEpisode = episode;
+    episodeStarts++;
+    notifyListeners();
+  }
 
   @override
   Future<void> playLiveStream(String url) async {}

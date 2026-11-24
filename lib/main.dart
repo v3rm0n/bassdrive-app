@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/api_response.dart';
@@ -72,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   ApiResponse? _apiResponse;
   bool _isLoading = true;
-  String? _error;
 
   @override
   void initState() {
@@ -84,11 +85,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     _loadData();
     _playerService.addListener(_onPlayerStateChanged);
-    _startProgressTracking();
+    _progressTimer =
+        Timer.periodic(const Duration(seconds: 5), (_) => _saveProgress());
   }
 
   @override
   void dispose() {
+    _progressTimer?.cancel();
     _playerService.removeListener(_onPlayerStateChanged);
     if (_ownsPlayerService) {
       _playerService.dispose();
@@ -98,121 +101,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onPlayerStateChanged() {
     if (mounted) {
+      final player = _playerService;
+      if (player.state == PlayerState.paused ||
+          (player.isPlaying && player.currentEpisode?.id != _lastEpisodeId)) {
+        _saveProgress();
+      }
       setState(() {});
     }
   }
 
-  void _startProgressTracking() {
-    // Track last saved position to avoid unnecessary saves
-    Duration? lastSavedPosition;
-    String? lastEpisodeId;
+  Timer? _progressTimer;
+  String? _lastEpisodeId;
+  Duration? _lastSavedPosition;
 
-    // Listen to player state changes to save on pause/stop
-    _playerService.addListener(() async {
-      if (!mounted) return;
+  void _saveProgress() {
+    final player = _playerService;
+    final episode = player.currentEpisode;
+    if (episode == null ||
+        player.isLive ||
+        !(player.isPlaying || player.state == PlayerState.paused)) {
+      return;
+    }
 
-      final episode = _playerService.currentEpisode;
-      if (episode == null || _playerService.isLive) return;
+    final position = player.position;
+    final duration = player.duration;
+    if (_lastEpisodeId == episode.id && _lastSavedPosition == position) return;
+    _lastEpisodeId = episode.id;
+    _lastSavedPosition = position;
+    unawaited(_persistProgress(ListeningProgress(
+      episodeId: episode.id,
+      episodeName: episode.displayName,
+      showName: episode.show,
+      position: position,
+      duration: duration > Duration.zero ? duration : null,
+      lastPlayed: DateTime.now(),
+    )));
+  }
 
-      // Save when paused or stopped
-      if (!_playerService.isPlaying &&
-          _playerService.state != PlayerState.loading &&
-          _playerService.state != PlayerState.buffering) {
-        // Only save if position has changed significantly (avoid duplicate saves)
-        final currentPosition = _playerService.position;
-        if (lastEpisodeId != episode.id ||
-            lastSavedPosition == null ||
-            (currentPosition.inMilliseconds - lastSavedPosition!.inMilliseconds)
-                    .abs() >
-                1000) {
-          try {
-            await _storageService.saveProgress(
-              ListeningProgress(
-                episodeId: episode.id,
-                episodeName: episode.displayName,
-                showName: episode.show,
-                position: currentPosition,
-                duration: _playerService.duration > Duration.zero
-                    ? _playerService.duration
-                    : null,
-                lastPlayed: DateTime.now(),
-              ),
-            );
-            lastSavedPosition = currentPosition;
-            lastEpisodeId = episode.id;
-          } catch (e) {
-            debugPrint('Error saving progress on pause: $e');
-          }
-        }
+  Future<void> _persistProgress(ListeningProgress progress) async {
+    try {
+      await _storageService.saveProgress(progress);
+      final duration = progress.duration;
+      if (duration != null &&
+          progress.position >= duration - const Duration(seconds: 30)) {
+        await _storageService.markEpisodeCompleted(progress.episodeId);
       }
-    });
-
-    // Periodic save while playing
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 5));
-      if (!mounted) return false;
-
-      if (_playerService.currentEpisode != null &&
-          _playerService.isPlaying &&
-          !_playerService.isLive) {
-        final episode = _playerService.currentEpisode!;
-        final currentPosition = _playerService.position;
-
-        try {
-          // Only save if position has changed
-          if (lastEpisodeId != episode.id ||
-              lastSavedPosition == null ||
-              (currentPosition.inMilliseconds -
-                          lastSavedPosition!.inMilliseconds)
-                      .abs() >
-                  1000) {
-            await _storageService.saveProgress(
-              ListeningProgress(
-                episodeId: episode.id,
-                episodeName: episode.displayName,
-                showName: episode.show,
-                position: currentPosition,
-                duration: _playerService.duration > Duration.zero
-                    ? _playerService.duration
-                    : null,
-                lastPlayed: DateTime.now(),
-              ),
-            );
-            lastSavedPosition = currentPosition;
-            lastEpisodeId = episode.id;
-          }
-
-          // Mark as completed if near end
-          if (_playerService.duration > Duration.zero &&
-              _playerService.position >=
-                  _playerService.duration - const Duration(seconds: 30)) {
-            await _storageService.markEpisodeCompleted(episode.id);
-          }
-        } catch (e) {
-          debugPrint('Error saving progress: $e');
-        }
-      }
-
-      return mounted;
-    });
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
   }
 
   Future<void> _loadData() async {
     try {
       setState(() {
         _isLoading = true;
-        _error = null;
       });
 
       final response = await _apiService.fetchArchive();
+      if (!mounted) return;
 
       setState(() {
         _apiResponse = response;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.toString();
         _isLoading = false;
       });
     }
@@ -224,8 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _archiveStatus(BuildContext context) {
     final theme = Theme.of(context);
 
     if (_isLoading) {
@@ -251,66 +204,75 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    if (_error != null) {
-      return _ChromeStatusScaffold(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.portable_wifi_off, size: 56, color: AppColors.error),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Signal lost',
-              style: theme.textTheme.displaySmall?.copyWith(
-                color: AppColors.textPrimary,
-              ),
+    return _ChromeStatusScaffold(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.portable_wifi_off, size: 56, color: AppColors.error),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Signal lost',
+            style: theme.textTheme.displaySmall?.copyWith(
+              color: AppColors.textPrimary,
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              _error!,
-              style: theme.textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ElevatedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Re-sync'),
-            ),
-          ],
-        ),
-      );
-    }
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Check your connection and try again. Offline episodes are available in Downloads.',
+            style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ElevatedButton.icon(
+            onPressed: _loadData,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Re-sync'),
+          ),
+        ],
+      ),
+    );
+  }
 
-    final screens = [
-      LiveStreamScreen(
-        playerService: _playerService,
-        liveStreamUrl: _apiResponse!.live,
-        storageService: _storageService,
-      ),
-      ArchiveScreen(
-        archive: _apiResponse!.archive,
+  @override
+  Widget build(BuildContext context) {
+    final data = _apiResponse;
+    final Widget content;
+    if (_currentIndex == 2) {
+      content = FullPlayer(
         playerService: _playerService,
         storageService: _storageService,
-        onPlayEpisode: _navigateToPlayer,
-      ),
-      // Player is now the main/central screen
-      FullPlayer(
-        playerService: _playerService,
-        storageService: _storageService,
-        liveStreamUrl: _apiResponse!.live,
-      ),
-      FavouritesScreen(
-        archive: _apiResponse!.archive,
+        liveStreamUrl: data?.live,
+      );
+    } else if (_currentIndex == 4) {
+      content = DownloadsScreen(
         playerService: _playerService,
         storageService: _storageService,
         onPlayEpisode: _navigateToPlayer,
-      ),
-      DownloadsScreen(
-        playerService: _playerService,
-        storageService: _storageService,
-        onPlayEpisode: _navigateToPlayer,
-      ),
-    ];
+      );
+    } else if (data == null) {
+      content = _archiveStatus(context);
+    } else {
+      content = switch (_currentIndex) {
+        0 => LiveStreamScreen(
+            playerService: _playerService,
+            liveStreamUrl: data.live,
+            storageService: _storageService,
+          ),
+        1 => ArchiveScreen(
+            archive: data.archive,
+            playerService: _playerService,
+            storageService: _storageService,
+            onPlayEpisode: _navigateToPlayer,
+          ),
+        3 => FavouritesScreen(
+            archive: data.archive,
+            playerService: _playerService,
+            storageService: _storageService,
+            onPlayEpisode: _navigateToPlayer,
+          ),
+        _ => throw StateError('Unknown destination $_currentIndex'),
+      };
+    }
 
     final destinations = const [
       NavigationItem(
@@ -354,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       },
       destinations: destinations,
-      content: screens[_currentIndex],
+      content: content,
     );
   }
 }

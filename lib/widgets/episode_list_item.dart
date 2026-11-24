@@ -14,7 +14,7 @@ class EpisodeListItem extends StatefulWidget {
   final Show? show;
   final AudioPlayerService playerService;
   final StorageService storageService;
-  final VoidCallback? onTap;
+  final VoidCallback? onOpenPlayer;
   final Widget? trailing;
 
   const EpisodeListItem({
@@ -23,7 +23,7 @@ class EpisodeListItem extends StatefulWidget {
     this.show,
     required this.playerService,
     required this.storageService,
-    this.onTap,
+    this.onOpenPlayer,
     this.trailing,
   });
 
@@ -91,6 +91,23 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   Future<void> _toggleFavourite() async {
     await widget.storageService.toggleFavourite(widget.episode.id);
     await _loadFavouriteStatus();
+  }
+
+  Future<void> _playEpisode() async {
+    final episode = widget.episode;
+    final player = widget.playerService;
+    if (player.currentEpisode?.id != episode.id || player.hasError) {
+      await player.playEpisode(episode);
+      if (!mounted || player.currentEpisode?.id != episode.id) return;
+      if (player.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Could not play this episode. Try again.')),
+        );
+        return;
+      }
+    }
+    widget.onOpenPlayer?.call();
   }
 
   Future<void> _downloadEpisode() async {
@@ -325,7 +342,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
               ),
             ],
           ),
-      onTap: widget.onTap,
+      onTap: _playEpisode,
     );
   }
 }

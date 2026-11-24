@@ -12,9 +12,12 @@ import '../services/download_service.dart';
 enum PlayerState { idle, loading, playing, paused, buffering, error }
 
 class AudioPlayerService extends ChangeNotifier {
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _player;
   final StorageService _storageService = StorageService();
-  final DownloadService _downloadService = DownloadService();
+  final DownloadService _downloadService;
+  int _request = 0;
+  bool _changingSource = false;
+  final _subscriptions = <StreamSubscription<dynamic>>[];
 
   PlayerState _state = PlayerState.idle;
   Episode? _currentEpisode;
@@ -33,9 +36,10 @@ class AudioPlayerService extends ChangeNotifier {
   Timer? _listeningTimeTimer;
   static const _listeningTimeInterval = Duration(seconds: 10);
 
-  AudioPlayerService() {
+  AudioPlayerService({AudioPlayer? player, DownloadService? downloads})
+      : _player = player ?? AudioPlayer(),
+        _downloadService = downloads ?? DownloadService() {
     _initializePlayer();
-    _prepareArtwork();
   }
 
   // Prepare artwork for iOS lock screen by copying asset to temp file
@@ -61,57 +65,61 @@ class AudioPlayerService extends ChangeNotifier {
   }
 
   void _initializePlayer() {
-    _player.positionStream.listen((position) {
+    _subscriptions.add(_player.positionStream.listen((position) {
+      if (_changingSource) return;
       _position = position;
       notifyListeners();
-    });
-
-    _player.durationStream.listen((duration) {
-      if (duration != null) {
-        _duration = duration;
-        notifyListeners();
-      }
-    });
-
-    _player.playerStateStream.listen((state) {
-      if (state.playing) {
-        _state = PlayerState.playing;
-        _startListeningTimeTracking();
-      } else if (state.processingState == ProcessingState.loading ||
-          state.processingState == ProcessingState.buffering) {
-        _state = PlayerState.buffering;
-        _stopListeningTimeTracking();
-      } else if (state.processingState == ProcessingState.ready) {
-        _state = PlayerState.paused;
-        _stopListeningTimeTracking();
-      } else if (state.processingState == ProcessingState.idle) {
-        _state = PlayerState.idle;
-        _stopListeningTimeTracking();
-      } else if (state.processingState == ProcessingState.completed) {
-        _state = PlayerState.idle;
-        _currentEpisode = null;
-        _stopListeningTimeTracking();
-      }
-
+    }));
+    _subscriptions.add(_player.durationStream.listen((duration) {
+      if (_changingSource) return;
+      _duration = duration ?? Duration.zero;
       notifyListeners();
-    });
+    }));
+    _subscriptions.add(_player.playerStateStream.listen((state) {
+      if (!_changingSource && !hasError) {
+        _updatePlayerState(state.processingState, state.playing);
+      }
+    }));
+    _subscriptions.add(_player.errorStream.listen((error) {
+      if (!_changingSource) _reportError(error);
+    }));
+  }
 
-    _player.playbackEventStream.listen(
-      (event) {},
-      onError: (Object e, StackTrace st) {
-        _error = e.toString();
-        _state = PlayerState.error;
-        _stopListeningTimeTracking();
-        notifyListeners();
-      },
-    );
+  void _updatePlayerState(ProcessingState processing, bool playing) {
+    _state = switch (processing) {
+      ProcessingState.loading => PlayerState.loading,
+      ProcessingState.buffering => PlayerState.buffering,
+      ProcessingState.ready =>
+        playing ? PlayerState.playing : PlayerState.paused,
+      ProcessingState.completed || ProcessingState.idle => PlayerState.idle,
+    };
+    if (processing == ProcessingState.completed) {
+      final episode = _currentEpisode;
+      _stopListeningTimeTracking();
+      if (episode != null) {
+        unawaited(_storageService.markEpisodeCompleted(episode.id));
+      }
+      _currentEpisode = null;
+      _isLive = false;
+    }
+    if (isPlaying) {
+      _startListeningTimeTracking();
+    } else {
+      _stopListeningTimeTracking();
+    }
+    notifyListeners();
+  }
+
+  void _reportError(Object error) {
+    _error = error.toString();
+    _state = PlayerState.error;
+    _stopListeningTimeTracking();
+    notifyListeners();
   }
 
   void _startListeningTimeTracking() {
-    _playbackStartTime ??= DateTime.now();
-
-    // Cancel any existing timer
-    _listeningTimeTimer?.cancel();
+    if (_playbackStartTime != null) return;
+    _playbackStartTime = DateTime.now();
 
     // Start a periodic timer to save listening time every 10 seconds
     _listeningTimeTimer = Timer.periodic(_listeningTimeInterval, (_) {
@@ -158,106 +166,82 @@ class AudioPlayerService extends ChangeNotifier {
   bool get isLoading =>
       _state == PlayerState.loading || _state == PlayerState.buffering;
 
-  Future<void> playLiveStream(String url) async {
+  Future<void> playLiveStream(String url) {
+    _liveStreamUrl = url;
+    return _loadSource(url);
+  }
+
+  Future<void> playEpisode(Episode episode, {Duration? startPosition}) =>
+      _loadSource(episode.encodedUrl,
+          episode: episode, startPosition: startPosition);
+
+  Future<void> _loadSource(String url,
+      {Episode? episode, Duration? startPosition}) async {
+    final request = ++_request;
+    _stopListeningTimeTracking();
+    _downloadService.cancelAutoDownloads();
+    _changingSource = true;
+    _state = PlayerState.loading;
+    _currentEpisode = episode;
+    _isLive = episode == null;
+    _error = null;
+    _position = Duration.zero;
+    _duration = Duration.zero;
+    notifyListeners();
+
     try {
-      _state = PlayerState.loading;
-      _isLive = true;
-      _currentEpisode = null;
-      _error = null;
-      _stopListeningTimeTracking();
-      notifyListeners();
-
-      _liveStreamUrl = url;
-
-      // Ensure artwork is ready
+      String? localPath;
+      if (episode != null) {
+        localPath = await _downloadService.getLocalPath(episode.id);
+        startPosition ??=
+            (await _storageService.getProgress(episode.id))?.position;
+      }
+      if (request != _request) return;
       await _prepareArtwork();
-
-      await _player.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(url),
+      if (request != _request) return;
+      final source = AudioSource.uri(
+          localPath == null ? Uri.parse(url) : Uri.file(localPath),
           tag: MediaItem(
-            id: 'live_stream',
-            title: 'Bassdrive Live',
-            artist: '24/7 Drum & Bass Radio',
+            id: episode?.id ?? 'live_stream',
+            title: episode?.displayName ?? 'Bassdrive Live',
+            artist: episode?.show ?? '24/7 Drum & Bass Radio',
             artUri: _artworkUri,
-          ),
-        ),
-      );
-
-      await _player.play();
+          ));
+      await _player.setAudioSource(source, initialPosition: startPosition);
+      if (request != _request) return;
+      _position = _player.position;
+      _duration = _player.duration ?? Duration.zero;
+      _changingSource = false;
+      unawaited(_play(request));
+      _updatePlayerState(_player.processingState, _player.playing);
+      if (episode != null && localPath == null) {
+        unawaited(
+            _downloadService.downloadEpisode(episode, type: DownloadType.auto));
+      }
     } catch (e) {
-      _error = 'Failed to play live stream: $e';
-      _state = PlayerState.error;
-      _stopListeningTimeTracking();
-      notifyListeners();
+      if (request != _request) return;
+      _changingSource = false;
+      _reportError(e);
     }
   }
 
-  Future<void> playEpisode(Episode episode, {Duration? startPosition}) async {
+  Future<void> _play(int request) async {
     try {
-      _state = PlayerState.loading;
-      _isLive = false;
-      _currentEpisode = episode;
-      _error = null;
-      _stopListeningTimeTracking();
-      notifyListeners();
-
-      // Check if episode is downloaded locally
-      Uri audioUri = Uri.parse(episode.encodedUrl);
-      final localPath = await _downloadService.getLocalPath(episode.id);
-      if (localPath != null) {
-        final file = File(localPath);
-        if (await file.exists()) {
-          // Use Uri.file() to properly handle Windows file paths
-          audioUri = Uri.file(localPath);
-        }
-      }
-
-      // Ensure artwork is ready
-      await _prepareArtwork();
-
-      // Create audio source with MediaItem (duration will be updated when known)
-      final audioSource = AudioSource.uri(
-        audioUri,
-        tag: MediaItem(
-          id: episode.id,
-          title: episode.displayName,
-          artist: episode.show,
-          artUri: _artworkUri,
-          duration: Duration.zero, // Will be updated via durationStream
-        ),
-      );
-
-      await _player.setAudioSource(audioSource);
-
-      if (startPosition != null && startPosition > Duration.zero) {
-        await _player.seek(startPosition);
-      }
-
       await _player.play();
-
-      // Cancel any ongoing auto-downloads from previous episodes
-      _downloadService.cancelAutoDownloads();
-
-      // Automatically download episode for offline listening (as auto type)
-      _downloadService.downloadEpisode(episode, type: DownloadType.auto);
     } catch (e) {
-      _error = 'Failed to play episode: $e';
-      _state = PlayerState.error;
-      _stopListeningTimeTracking();
-      notifyListeners();
+      if (request == _request) _reportError(e);
     }
   }
 
   Future<void> play() async {
-    // Guard against playing when no audio source is set
-    if (_player.audioSource == null) {
-      if (_liveStreamUrl != null) {
-        await playLiveStream(_liveStreamUrl!);
-      }
-      return;
+    final episode = _currentEpisode;
+    if (hasError && episode != null) {
+      await playEpisode(episode);
+    } else if (_player.audioSource == null || hasError) {
+      if (_liveStreamUrl != null) await playLiveStream(_liveStreamUrl!);
+    } else {
+      await _play(_request);
     }
-    await _player.play();
   }
 
   Future<void> pause() async {
@@ -265,7 +249,7 @@ class AudioPlayerService extends ChangeNotifier {
   }
 
   Future<void> togglePlayPause() async {
-    if (_player.playing) {
+    if (_player.playing && !hasError) {
       await pause();
     } else {
       await play();
@@ -277,7 +261,13 @@ class AudioPlayerService extends ChangeNotifier {
   }
 
   Future<void> stop() async {
+    final request = ++_request;
+    _changingSource = true;
+    _stopListeningTimeTracking();
     await _player.stop();
+    if (request != _request) return;
+    _changingSource = false;
+    _error = null;
     _currentEpisode = null;
     _isLive = false;
     _state = PlayerState.idle;
@@ -298,6 +288,10 @@ class AudioPlayerService extends ChangeNotifier {
   @override
   void dispose() {
     _stopListeningTimeTracking();
+    ++_request;
+    for (final subscription in _subscriptions) {
+      unawaited(subscription.cancel());
+    }
     _player.dispose();
     super.dispose();
   }

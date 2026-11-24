@@ -123,7 +123,8 @@ void main() {
     expect(find.byIcon(Icons.play_arrow), findsOneWidget);
 
     playerService.setState(PlayerState.playing);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byIcon(Icons.pause), findsOneWidget);
   });
 
@@ -178,7 +179,7 @@ class _FakeAudioPlayerService extends ChangeNotifier
   bool _isLive;
   Episode? _currentEpisode;
   Duration _position;
-  Duration _duration;
+  final Duration _duration;
   String? _error;
 
   int playLiveCalls = 0;

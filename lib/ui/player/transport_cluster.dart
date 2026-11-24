@@ -17,7 +17,7 @@ class TransportCluster extends StatelessWidget {
 
   final PlayerViewState viewState;
   final PlayerLayoutScale scale;
-  final VoidCallback onPrimaryPressed;
+  final VoidCallback? onPrimaryPressed;
   final VoidCallback? onSkipBack;
   final VoidCallback? onSkipForward;
 

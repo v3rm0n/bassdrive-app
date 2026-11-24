@@ -17,6 +17,21 @@ class PlayerLayoutScale {
   final double timelineBottomSpacing;
   final double transportGap;
 
+  static PlayerLayoutScale forViewport(double width, double height) {
+    if (height < 620) {
+      return const PlayerLayoutScale(
+        maxContentWidth: 520,
+        horizontalPadding: 16,
+        heroSize: 132,
+        metaSpacing: 6,
+        sectionSpacing: 12,
+        timelineBottomSpacing: 8,
+        transportGap: 18,
+      );
+    }
+    return fromWidth(width);
+  }
+
   static PlayerLayoutScale fromWidth(double width) {
     if (width >= 1200) {
       return const PlayerLayoutScale(

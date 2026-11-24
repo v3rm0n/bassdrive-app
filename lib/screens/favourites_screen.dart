@@ -154,27 +154,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
     _applyFiltersAndSort();
   }
 
-  Future<void> _playEpisode(Episode episode) async {
-    // Check if this episode is already the current episode
-    final isCurrentEpisode =
-        widget.playerService.currentEpisode?.id == episode.id;
-
-    if (isCurrentEpisode) {
-      // If already playing, do nothing - user can navigate to player tab
-      return;
-    }
-
-    final progress = await widget.storageService.getProgress(episode.id);
-
-    await widget.playerService.playEpisode(
-      episode,
-      startPosition: progress?.position,
-    );
-
-    // Navigate to player screen
-    widget.onPlayEpisode?.call();
-  }
-
   List<String> _getUniqueShows() {
     final shows = _allFavouriteEpisodes.map((e) => e.show).toSet().toList();
     shows.sort();
@@ -290,7 +269,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<SortOption>(
-                              value: _currentSort,
+                              initialValue: _currentSort,
                               onChanged: (value) {
                                 if (value != null) {
                                   _onSortChanged(value);
@@ -333,7 +312,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String?>(
-                                value: _selectedShowFilter,
+                                initialValue: _selectedShowFilter,
                                 onChanged: _onShowFilterChanged,
                                 decoration: InputDecoration(
                                   labelText: 'Filter by show',
@@ -491,11 +470,12 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                                   episodes: [episode],
                                 );
                                 return EpisodeListItem(
+                                  key: ValueKey(episode.id),
                                   episode: episode,
                                   show: show,
                                   playerService: widget.playerService,
                                   storageService: widget.storageService,
-                                  onTap: () => _playEpisode(episode),
+                                  onOpenPlayer: widget.onPlayEpisode,
                                 );
                               },
                             ),
