@@ -7,10 +7,14 @@ class AppColors {
   static const Color signal = Color(0xFFFFD447);
   static const Color signalPressed = Color(0xFFE6BC2E);
   static const Color signalGlow = Color(0x40FFD447);
+  static const Color signalSurface = Color(0x1FFFD447);
   static const Color onSignal = Color(0xFF1A1405);
 
   static const Color onAir = Color(0xFFFF4F5E);
+  static const Color onAirGlow = Color(0x40FF4F5E);
+  static const Color onAirSurface = Color(0x22FF4F5E);
 
+  static const Color backgroundDeep = Color(0xFF100D18);
   static const Color background = Color(0xFF15111F);
   static const Color surface = Color(0xFF1D1829);
   static const Color surfaceRaised = Color(0xFF261F35);
@@ -39,9 +43,11 @@ class AppSpacing {
 /// Radii follow hierarchy: small tiles are nearly square, sheets are softer,
 /// and only the transport buttons are fully round.
 class AppRadii {
-  static const double sm = 4;
-  static const double md = 8;
-  static const double lg = 14;
+  static const double xs = 2;
+  static const double sm = 6;
+  static const double md = 10;
+  static const double lg = 16;
+  static const double xl = 22;
   static const double pill = 999;
 }
 
@@ -72,13 +78,29 @@ class AppTypography {
     FontWeight weight = FontWeight.w800,
     Color color = AppColors.textPrimary,
     double height = 0.95,
+    double letterSpacing = 0,
   }) {
     return GoogleFonts.bigShoulders(
       fontSize: size,
       fontWeight: weight,
       height: height,
-      letterSpacing: 0,
+      letterSpacing: letterSpacing,
       color: color,
+    );
+  }
+
+  static TextStyle kicker({
+    double size = 11,
+    Color color = AppColors.textMuted,
+    double letterSpacing = 1.4,
+  }) {
+    return GoogleFonts.instrumentSans(
+      fontSize: size,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      letterSpacing: letterSpacing,
+      color: color,
+      fontFeatures: tabular,
     );
   }
 
@@ -100,23 +122,32 @@ class AppTypography {
 
   static TextTheme textTheme(ColorScheme colorScheme) {
     final onSurface = colorScheme.onSurface;
+    // Touch all 7 bundled font weights so offline/test font loading warms every asset.
+    display(size: 64, weight: FontWeight.w900, color: onSurface);
+    _ui(12, FontWeight.w700, onSurface);
+
     return TextTheme(
-      displayLarge: display(size: 56, color: onSurface),
-      displayMedium: display(size: 40, color: onSurface),
-      displaySmall: display(size: 32, color: onSurface, height: 1.0),
-      headlineMedium: display(size: 28, weight: FontWeight.w700),
-      headlineSmall: display(size: 24, weight: FontWeight.w700),
+      displayLarge: display(size: 56, weight: FontWeight.w900, color: onSurface),
+      displayMedium: display(size: 40, weight: FontWeight.w800, color: onSurface),
+      displaySmall: display(
+        size: 32,
+        weight: FontWeight.w800,
+        color: onSurface,
+        height: 1.0,
+      ),
+      headlineMedium: display(size: 28, weight: FontWeight.w700, color: onSurface),
+      headlineSmall: display(size: 24, weight: FontWeight.w700, color: onSurface),
       titleLarge: _ui(17, FontWeight.w600, onSurface, height: 1.3),
       titleMedium: _ui(15, FontWeight.w600, onSurface, height: 1.3),
       titleSmall: _ui(13, FontWeight.w600, onSurface, height: 1.3),
       bodyLarge: _ui(16, FontWeight.w400, onSurface, height: 1.45),
-      bodyMedium: _ui(15, FontWeight.w400, AppColors.textSecondary),
-      bodySmall: _ui(13, FontWeight.w400, AppColors.textMuted),
+      bodyMedium: _ui(14, FontWeight.w400, AppColors.textSecondary, height: 1.4),
+      bodySmall: _ui(12.5, FontWeight.w400, AppColors.textMuted, height: 1.35),
       labelLarge: _ui(15, FontWeight.w600, onSurface, height: 1.2),
       labelMedium:
           _ui(13, FontWeight.w500, AppColors.textSecondary, height: 1.2)
               .copyWith(fontFeatures: tabular),
-      labelSmall: _ui(12, FontWeight.w500, AppColors.textMuted, height: 1.2)
+      labelSmall: _ui(11.5, FontWeight.w500, AppColors.textMuted, height: 1.2)
           .copyWith(fontFeatures: tabular),
     );
   }

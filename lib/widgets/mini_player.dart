@@ -1,137 +1,167 @@
 import 'package:flutter/material.dart';
-import '../services/audio_player_service.dart';
 
+import '../services/audio_player_service.dart';
+import '../ui/player/speaker_cone.dart';
+import '../ui/theme/app_theme_tokens.dart';
+
+/// Compact broadcast transport dock shown above bottom navigation (mobile)
+/// or at the bottom of the content console (desktop) while browsing lists.
 class MiniPlayer extends StatelessWidget {
   final AudioPlayerService playerService;
+  final String? nowPlaying;
   final VoidCallback onTap;
 
   const MiniPlayer({
     super.key,
     required this.playerService,
+    this.nowPlaying,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final title = playerService.isLive
-        ? 'Bassdrive Live'
-        : (playerService.currentEpisode?.displayName ?? 'Unknown');
-    final subtitle = playerService.isLive
-        ? '24/7 Drum & Bass Radio'
-        : (playerService.currentEpisode?.show ?? '');
+    return ListenableBuilder(
+      listenable: playerService,
+      builder: (context, _) {
+        final episode = playerService.currentEpisode;
+        final isLive = playerService.isLive;
+        if (!isLive && episode == null) {
+          return const SizedBox.shrink();
+        }
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 72,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2),
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              // Album art thumbnail
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.colorScheme.primary.withValues(alpha: 0.3),
-                      theme.colorScheme.primary.withValues(alpha: 0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  playerService.isLive ? Icons.radio : Icons.music_note,
-                  color: theme.colorScheme.primary,
-                  size: 24,
+        final theme = Theme.of(context);
+        final isPlaying = playerService.isPlaying;
+        final isLoading = playerService.isLoading;
+        final accent = isLive ? AppColors.onAir : AppColors.signal;
+
+        final double progress = (!isLive &&
+                playerService.duration.inMilliseconds > 0)
+            ? (playerService.position.inMilliseconds /
+                    playerService.duration.inMilliseconds)
+                .clamp(0.0, 1.0)
+            : 0.0;
+
+        final String kickerText = isLive
+            ? (isPlaying ? 'LIVE ON AIR' : 'LIVE PAUSED')
+            : 'ARCHIVE DECK';
+        final String headline = isLive
+            ? 'Bassdrive 24/7 Stream / ${nowPlaying ?? "Worldwide Drum & Bass"}'
+            : '${episode!.title} / ${episode.dateLabel ?? episode.show}';
+
+        return Material(
+          color: AppColors.surface,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppColors.outlineStrong),
                 ),
               ),
-              const SizedBox(width: 16),
-              // Track info
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isLive && progress > 0)
+                    LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 2,
+                      color: AppColors.signal,
+                      backgroundColor: AppColors.outline,
+                    )
+                  else if (isLive && isPlaying)
+                    Container(
+                      height: 2,
+                      color: AppColors.onAir.withValues(alpha: 0.85),
                     ),
-                    if (subtitle.isNotEmpty)
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        SpeakerCone(
+                          size: 38,
+                          isPlaying: isPlaying,
+                          accent: accent,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                ),
-              ),
-              // Play/Pause button
-              if (playerService.isLoading)
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor:
-                        AlwaysStoppedAnimation(theme.colorScheme.primary),
-                  ),
-                )
-              else
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: playerService.togglePlayPause,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        playerService.isPlaying
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                        color: theme.colorScheme.primary,
-                      ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: isPlaying
+                                          ? accent
+                                          : AppColors.textMuted,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    kickerText,
+                                    style: AppTypography.kicker(
+                                      size: 10,
+                                      color: isPlaying
+                                          ? accent
+                                          : AppColors.textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                headline,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: AppColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        if (isLoading)
+                          const Padding(
+                            padding: EdgeInsets.all(10),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        else
+                          IconButton(
+                            onPressed: playerService.togglePlayPause,
+                            tooltip: isPlaying ? 'Pause' : 'Play',
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.surfaceRaised,
+                              side: const BorderSide(color: AppColors.outline),
+                            ),
+                            icon: Icon(
+                              isPlaying
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              color: AppColors.signal,
+                              size: 22,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ),
-              const SizedBox(width: 8),
-              // Chevron up to indicate expandable
-              Icon(
-                Icons.keyboard_arrow_up,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                size: 20,
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

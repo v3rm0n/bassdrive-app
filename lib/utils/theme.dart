@@ -21,14 +21,21 @@ class AppTheme {
     const colorScheme = ColorScheme.dark(
       primary: AppColors.signal,
       onPrimary: AppColors.onSignal,
+      primaryContainer: AppColors.surfaceRaised,
+      onPrimaryContainer: AppColors.signal,
       secondary: AppColors.signal,
       onSecondary: AppColors.onSignal,
+      secondaryContainer: AppColors.surfaceOverlay,
+      onSecondaryContainer: AppColors.textPrimary,
       tertiary: AppColors.onAir,
+      onTertiary: AppColors.textPrimary,
+      tertiaryContainer: AppColors.onAirSurface,
+      onTertiaryContainer: AppColors.onAir,
       surface: AppColors.surface,
       onSurface: AppColors.textPrimary,
       onSurfaceVariant: AppColors.textSecondary,
-      surfaceContainerLowest: AppColors.background,
-      surfaceContainerLow: AppColors.surface,
+      surfaceContainerLowest: AppColors.backgroundDeep,
+      surfaceContainerLow: AppColors.background,
       surfaceContainer: AppColors.surface,
       surfaceContainerHigh: AppColors.surfaceRaised,
       surfaceContainerHighest: AppColors.surfaceOverlay,
@@ -39,17 +46,20 @@ class AppTheme {
     );
     final textTheme = AppTypography.textTheme(colorScheme);
     final squareish = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadii.sm),
+      borderRadius: BorderRadius.circular(AppRadii.md),
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.background,
-      canvasColor: AppColors.background,
+      canvasColor: AppColors.surfaceRaised,
       primaryColor: AppColors.signal,
       colorScheme: colorScheme,
       textTheme: textTheme,
+      splashColor: AppColors.signalSurface,
+      highlightColor: Colors.transparent,
+      hoverColor: AppColors.surfaceRaised.withValues(alpha: 0.65),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
@@ -58,7 +68,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleSpacing: AppSpacing.md,
-        titleTextStyle: textTheme.headlineMedium,
+        titleTextStyle: textTheme.displaySmall,
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
@@ -82,8 +92,9 @@ class AppTheme {
         unselectedLabelStyle: textTheme.headlineSmall,
         indicatorColor: AppColors.signal,
         indicatorSize: TabBarIndicatorSize.label,
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppColors.signal, width: 3),
+        indicator: UnderlineTabIndicator(
+          borderRadius: BorderRadius.circular(AppRadii.xs),
+          borderSide: const BorderSide(color: AppColors.signal, width: 3),
         ),
         dividerColor: AppColors.outline,
         labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -97,7 +108,7 @@ class AppTheme {
         suffixIconColor: AppColors.textMuted,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          vertical: 13,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.md),
@@ -113,22 +124,28 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceRaised,
+        backgroundColor: AppColors.surface,
+        selectedColor: AppColors.signalSurface,
+        deleteIconColor: AppColors.textSecondary,
         side: const BorderSide(color: AppColors.outline),
         labelStyle: textTheme.labelMedium,
-        shape: squareish,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.backgroundDeep,
         surfaceTintColor: Colors.transparent,
         indicatorColor: Colors.transparent,
-        height: 72,
+        height: 74,
         elevation: 0,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return IconThemeData(
             color: isSelected ? AppColors.signal : AppColors.textMuted,
+            size: 22,
           );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
@@ -149,7 +166,7 @@ class AppTheme {
         inactiveTrackColor: AppColors.outline,
         thumbColor: AppColors.signal,
         overlayColor: AppColors.signalGlow,
-        trackHeight: 3,
+        trackHeight: 4,
         thumbShape: RoundSliderThumbShape(enabledThumbRadius: 7),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
@@ -161,7 +178,7 @@ class AppTheme {
           foregroundColor: AppColors.onSignal,
           backgroundColor: AppColors.signal,
           elevation: 0,
-          minimumSize: const Size(64, 48),
+          minimumSize: const Size(64, 50),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           textStyle: textTheme.labelLarge,
           shape: squareish,
@@ -171,7 +188,8 @@ class AppTheme {
         style: FilledButton.styleFrom(
           foregroundColor: AppColors.onSignal,
           backgroundColor: AppColors.signal,
-          minimumSize: const Size(64, 48),
+          minimumSize: const Size(64, 50),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           textStyle: textTheme.labelLarge,
           shape: squareish,
         ),
@@ -179,8 +197,10 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
+          backgroundColor: AppColors.surface,
           side: const BorderSide(color: AppColors.outlineStrong),
-          minimumSize: const Size(64, 48),
+          minimumSize: const Size(64, 50),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           textStyle: textTheme.labelLarge,
           shape: squareish,
         ),
@@ -199,6 +219,7 @@ class AppTheme {
         contentTextStyle: textTheme.bodyMedium,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.lg),
+          side: const BorderSide(color: AppColors.outlineStrong),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
@@ -210,17 +231,24 @@ class AppTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.textPrimary,
+        backgroundColor: AppColors.surfaceOverlay,
         contentTextStyle:
-            textTheme.bodyMedium?.copyWith(color: AppColors.background),
-        actionTextColor: AppColors.background,
+            textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
+        actionTextColor: AppColors.signal,
         behavior: SnackBarBehavior.floating,
-        shape: squareish,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          side: const BorderSide(color: AppColors.outlineStrong),
+        ),
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: AppColors.surfaceRaised,
         surfaceTintColor: Colors.transparent,
         textStyle: textTheme.bodyLarge,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          side: const BorderSide(color: AppColors.outlineStrong),
+        ),
       ),
       iconTheme: const IconThemeData(color: AppColors.textSecondary),
       extensions: <ThemeExtension<dynamic>>[

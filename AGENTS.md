@@ -4,7 +4,7 @@
 
 **Type:** Flutter cross-platform audio streaming application  
 **Purpose:** Stream Bassdrive Internet radio (24/7 Drum & Bass) and archived shows  
-**Version:** 0.2.0+7  
+**Version:** 0.3.0+9  
 **Repository:** https://github.com/v3rm0n/bassdrive-app  
 **License:** MIT
 

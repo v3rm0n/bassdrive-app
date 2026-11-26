@@ -16,21 +16,33 @@ class LiveBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = isPlaying ? 'On air' : (isReadyState ? 'Ready' : 'Paused');
-    final lamp = isPlaying ? AppColors.onAir : AppColors.textMuted;
+    final lamp = isPlaying
+        ? AppColors.onAir
+        : (isReadyState ? AppColors.signal : AppColors.textMuted);
 
     return AnimatedContainer(
       duration: AppMotion.quick,
       curve: AppMotion.entranceCurve,
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 6,
+        horizontal: AppSpacing.md,
+        vertical: 7,
       ),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppRadii.sm),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
           color: isPlaying ? AppColors.onAir : AppColors.outlineStrong,
+          width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: isPlaying
+                ? AppColors.onAir.withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -44,7 +56,7 @@ class LiveBadge extends StatelessWidget {
               boxShadow: isPlaying
                   ? [
                       BoxShadow(
-                        color: AppColors.onAir.withValues(alpha: 0.7),
+                        color: AppColors.onAir.withValues(alpha: 0.8),
                         blurRadius: 8,
                       ),
                     ]
@@ -58,7 +70,7 @@ class LiveBadge extends StatelessWidget {
                   color: isPlaying
                       ? AppColors.textPrimary
                       : AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
           ),
         ],

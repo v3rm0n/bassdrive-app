@@ -31,7 +31,11 @@ class TrackMetaBlock extends StatelessWidget {
       children: [
         Text(
           title,
-          style: AppTypography.display(size: scale.titleSize),
+          style: AppTypography.display(
+            size: scale.titleSize,
+            weight: FontWeight.w800,
+            height: 0.94,
+          ),
           textAlign: align,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -41,17 +45,31 @@ class TrackMetaBlock extends StatelessWidget {
           subtitle,
           style: theme.textTheme.titleLarge?.copyWith(
             color: AppColors.signal,
+            fontWeight: FontWeight.w600,
           ),
           textAlign: align,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         if (detail != null) ...[
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            detail!,
-            style: theme.textTheme.bodyMedium,
-            textAlign: align,
+          const SizedBox(height: AppSpacing.xs),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              border: Border.all(color: AppColors.outline),
+            ),
+            child: Text(
+              detail!,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: align,
+            ),
           ),
         ],
       ],

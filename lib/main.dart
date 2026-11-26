@@ -15,6 +15,7 @@ import 'ui/theme/app_theme_tokens.dart';
 import 'utils/theme.dart';
 import 'widgets/adaptive_navigation.dart';
 import 'widgets/full_player.dart';
+import 'widgets/mini_player.dart';
 import 'screens/archive_screen.dart';
 import 'screens/downloads_screen.dart';
 import 'screens/favourites_screen.dart';
@@ -219,6 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_isLoading) {
       return _StatusScaffold(
+        kicker: 'SIGNAL ACQUISITION',
         children: [
           const SizedBox(
             width: 28,
@@ -237,8 +239,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return _StatusScaffold(
+      kicker: 'CONNECTION LOST',
+      accentColor: AppColors.error,
       children: [
-        const Icon(Icons.wifi_off_rounded, size: 32, color: AppColors.error),
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: Border.all(
+              color: AppColors.error.withValues(alpha: 0.4),
+            ),
+          ),
+          child: const Icon(
+            Icons.wifi_off_rounded,
+            size: 24,
+            color: AppColors.error,
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
         Text("Can't reach Bassdrive", style: theme.textTheme.displaySmall),
         const SizedBox(height: AppSpacing.xs),
@@ -333,6 +352,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ];
 
+    final hasActiveAudio =
+        _playerService.isLive || _playerService.currentEpisode != null;
+    final showMiniPlayer =
+        hasActiveAudio && _currentIndex != 0 && _currentIndex != 2;
+
     return AdaptiveNavigation(
       currentIndex: _currentIndex,
       onDestinationSelected: (index) {
@@ -342,14 +366,29 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       destinations: destinations,
       content: content,
+      isAudioPlaying: _playerService.isPlaying,
+      isLiveAudio: _playerService.isLive,
+      bottomDock: showMiniPlayer
+          ? MiniPlayer(
+              playerService: _playerService,
+              nowPlaying: _nowPlaying,
+              onTap: _navigateToPlayer,
+            )
+          : null,
     );
   }
 }
 
 class _StatusScaffold extends StatelessWidget {
-  const _StatusScaffold({required this.children});
+  const _StatusScaffold({
+    required this.children,
+    required this.kicker,
+    this.accentColor = AppColors.signal,
+  });
 
   final List<Widget> children;
+  final String kicker;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -357,13 +396,28 @@ class _StatusScaffold extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
+            constraints: const BoxConstraints(maxWidth: 440),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: children,
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                  border: Border.all(color: AppColors.outlineStrong),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      kicker,
+                      style: AppTypography.kicker(color: accentColor),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ...children,
+                  ],
+                ),
               ),
             ),
           ),

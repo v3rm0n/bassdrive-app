@@ -37,7 +37,7 @@ class TransportCluster extends StatelessWidget {
             tooltip: 'Back 10 seconds',
             size: controlTheme.secondarySize,
             iconColor: controlTheme.secondaryIcon,
-            background: controlTheme.secondaryBackground,
+            borderColor: controlTheme.secondaryBackground,
             onPressed: onSkipBack,
           ),
         if (showSkipButtons) SizedBox(width: scale.transportGap),
@@ -57,7 +57,7 @@ class TransportCluster extends StatelessWidget {
             tooltip: 'Forward 30 seconds',
             size: controlTheme.secondarySize,
             iconColor: controlTheme.secondaryIcon,
-            background: controlTheme.secondaryBackground,
+            borderColor: controlTheme.secondaryBackground,
             onPressed: onSkipForward,
           ),
       ],
@@ -86,48 +86,59 @@ class _PrimaryControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: AppMotion.quick,
-      curve: AppMotion.entranceCurve,
-      width: size,
-      height: size,
+    return Container(
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: background,
-        boxShadow: [
-          BoxShadow(
-            color: ringColor.withValues(alpha: isPlaying ? 0.5 : 0),
-            blurRadius: 20,
-          ),
-        ],
+        border: Border.all(
+          color: isPlaying ? AppColors.signal.withValues(alpha: 0.45) : AppColors.outline,
+          width: 1.5,
+        ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: Semantics(
-            button: true,
-            label: isPlaying ? 'Pause' : 'Play',
-            child: Center(
-              child: AnimatedSwitcher(
-                duration: AppMotion.quick,
-                child: isLoading
-                    ? SizedBox(
-                        key: const ValueKey<String>('loading'),
-                        width: size * 0.36,
-                        height: size * 0.36,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.4,
-                          valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+      child: AnimatedContainer(
+        duration: AppMotion.quick,
+        curve: AppMotion.entranceCurve,
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: background,
+          boxShadow: [
+            BoxShadow(
+              color: ringColor.withValues(alpha: isPlaying ? 0.55 : 0.15),
+              blurRadius: isPlaying ? 24 : 10,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: Semantics(
+              button: true,
+              label: isPlaying ? 'Pause' : 'Play',
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: AppMotion.quick,
+                  child: isLoading
+                      ? SizedBox(
+                          key: const ValueKey<String>('loading'),
+                          width: size * 0.36,
+                          height: size * 0.36,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(iconColor),
+                          ),
+                        )
+                      : Icon(
+                          isPlaying ? Icons.pause : Icons.play_arrow,
+                          key: ValueKey<bool>(isPlaying),
+                          size: size * 0.52,
+                          color: iconColor,
                         ),
-                      )
-                    : Icon(
-                        isPlaying ? Icons.pause : Icons.play_arrow,
-                        key: ValueKey<bool>(isPlaying),
-                        size: size * 0.52,
-                        color: iconColor,
-                      ),
+                ),
               ),
             ),
           ),
@@ -143,7 +154,7 @@ class _SecondaryControl extends StatelessWidget {
     required this.tooltip,
     required this.size,
     required this.iconColor,
-    required this.background,
+    required this.borderColor,
     required this.onPressed,
   });
 
@@ -151,7 +162,7 @@ class _SecondaryControl extends StatelessWidget {
   final String tooltip;
   final double size;
   final Color iconColor;
-  final Color background;
+  final Color borderColor;
   final VoidCallback? onPressed;
 
   @override
@@ -162,8 +173,8 @@ class _SecondaryControl extends StatelessWidget {
         width: size,
         height: size,
         child: Material(
-          color: Colors.transparent,
-          shape: CircleBorder(side: BorderSide(color: background, width: 1.5)),
+          color: AppColors.surface,
+          shape: CircleBorder(side: BorderSide(color: borderColor, width: 1.5)),
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: onPressed,

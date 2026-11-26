@@ -4,6 +4,7 @@ import '../models/episode.dart';
 import '../models/show.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
+import '../ui/theme/app_theme_tokens.dart';
 import '../widgets/episode_list_item.dart';
 
 enum SortOption {
@@ -33,18 +34,24 @@ class FavouritesScreen extends StatefulWidget {
 }
 
 class _FavouritesScreenState extends State<FavouritesScreen> {
+  final TextEditingController _searchController = TextEditingController();
   List<Episode> _allFavouriteEpisodes = [];
   List<Episode> _filteredEpisodes = [];
   bool _isLoading = true;
   SortOption _currentSort = SortOption.dateNewest;
   String _searchQuery = '';
   String? _selectedShowFilter;
-  bool _showFilters = false;
 
   @override
   void initState() {
     super.initState();
     _loadFavourites();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFavourites() async {
@@ -55,7 +62,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
     final favouriteIds = await widget.storageService.getFavourites();
     final episodes = <Episode>[];
 
-    // Search through all archive days and shows to find favourite episodes
     for (final dayEntry in widget.archive.entries) {
       for (final show in dayEntry.value.shows) {
         for (final episode in show.episodes) {
@@ -78,7 +84,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
   void _applyFiltersAndSort() {
     var episodes = List<Episode>.from(_allFavouriteEpisodes);
 
-    // Apply search filter
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       episodes = episodes.where((episode) {
@@ -87,14 +92,12 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
       }).toList();
     }
 
-    // Apply show filter
     if (_selectedShowFilter != null && _selectedShowFilter!.isNotEmpty) {
       episodes = episodes
           .where((episode) => episode.show == _selectedShowFilter)
           .toList();
     }
 
-    // Apply sorting
     switch (_currentSort) {
       case SortOption.dateNewest:
         episodes.sort((a, b) {
@@ -163,32 +166,17 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
   String _getSortLabel(SortOption sort) {
     switch (sort) {
       case SortOption.dateNewest:
-        return 'Date: Newest First';
+        return 'Newest';
       case SortOption.dateOldest:
-        return 'Date: Oldest First';
+        return 'Oldest';
       case SortOption.nameAZ:
-        return 'Name: A to Z';
+        return 'Title A-Z';
       case SortOption.nameZA:
-        return 'Name: Z to A';
+        return 'Title Z-A';
       case SortOption.showAZ:
-        return 'Show: A to Z';
+        return 'Show A-Z';
       case SortOption.showZA:
-        return 'Show: Z to A';
-    }
-  }
-
-  IconData _getSortIcon(SortOption sort) {
-    switch (sort) {
-      case SortOption.dateNewest:
-        return Icons.arrow_downward;
-      case SortOption.dateOldest:
-        return Icons.arrow_upward;
-      case SortOption.nameAZ:
-      case SortOption.showAZ:
-        return Icons.sort_by_alpha;
-      case SortOption.nameZA:
-      case SortOption.showZA:
-        return Icons.sort_by_alpha_outlined;
+        return 'Show Z-A';
     }
   }
 
@@ -201,287 +189,276 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
       appBar: AppBar(
         title: const Text('Favourites'),
         actions: [
-          IconButton(
-            icon:
-                Icon(_showFilters ? Icons.filter_list_off : Icons.filter_list),
-            onPressed: () {
-              setState(() {
-                _showFilters = !_showFilters;
-              });
-            },
-          ),
+          if (!_isLoading && _allFavouriteEpisodes.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.xs),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                    border: Border.all(color: AppColors.outline),
+                  ),
+                  child: Text(
+                    '${_filteredEpisodes.length} SAVED',
+                    style: AppTypography.kicker(
+                      size: 10,
+                      color: AppColors.signal,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh favourites',
             onPressed: _loadFavourites,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search and Filter Section
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            height: _showFilters ? null : 0,
-            child: ClipRect(
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: _showFilters ? 1.0 : 0.0,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.2),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _allFavouriteEpisodes.isEmpty
+              ? _buildEmptyState(theme)
+              : Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                        AppSpacing.md,
+                        AppSpacing.sm,
                       ),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Search Field
-                      TextField(
-                        onChanged: _onSearchChanged,
-                        decoration: InputDecoration(
-                          hintText: 'Search favourites...',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _onSearchChanged('');
-                                  },
-                                )
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                      decoration: const BoxDecoration(
+                        color: AppColors.background,
+                        border: Border(
+                          bottom: BorderSide(color: AppColors.outline),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      // Sort Dropdown
-                      Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: DropdownButtonFormField<SortOption>(
-                              initialValue: _currentSort,
-                              onChanged: (value) {
-                                if (value != null) {
-                                  _onSortChanged(value);
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Sort by',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                              ),
-                              items: SortOption.values.map((sort) {
-                                return DropdownMenuItem(
-                                  value: sort,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        _getSortIcon(sort),
-                                        size: 18,
-                                        color: theme.colorScheme.primary,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(_getSortLabel(sort)),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
+                          TextField(
+                            controller: _searchController,
+                            onChanged: _onSearchChanged,
+                            decoration: InputDecoration(
+                              hintText: 'Search favourites...',
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _onSearchChanged('');
+                                      },
+                                    )
+                                  : null,
                             ),
                           ),
-                        ],
-                      ),
-                      // Show Filter (only if there are shows to filter)
-                      if (uniqueShows.length > 1) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<String?>(
-                                initialValue: _selectedShowFilter,
-                                onChanged: _onShowFilterChanged,
-                                decoration: InputDecoration(
-                                  labelText: 'Filter by show',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
+                          const SizedBox(height: AppSpacing.sm),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                Text(
+                                  'SORT',
+                                  style: AppTypography.kicker(size: 10),
                                 ),
-                                items: [
-                                  const DropdownMenuItem(
-                                    value: null,
-                                    child: Text('All shows'),
+                                const SizedBox(width: AppSpacing.xs),
+                                for (final sort in [
+                                  SortOption.dateNewest,
+                                  SortOption.dateOldest,
+                                  SortOption.nameAZ,
+                                  SortOption.showAZ,
+                                ])
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: _FilterPill(
+                                      label: _getSortLabel(sort),
+                                      isSelected: _currentSort == sort,
+                                      onTap: () => _onSortChanged(sort),
+                                    ),
                                   ),
-                                  ...uniqueShows.map((show) {
-                                    return DropdownMenuItem(
-                                      value: show,
-                                      child: Text(
-                                        show,
-                                        overflow: TextOverflow.ellipsis,
+                              ],
+                            ),
+                          ),
+                          if (uniqueShows.length > 1) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'SHOW',
+                                    style: AppTypography.kicker(size: 10),
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: _FilterPill(
+                                      label: 'All shows',
+                                      isSelected: _selectedShowFilter == null,
+                                      onTap: () => _onShowFilterChanged(null),
+                                    ),
+                                  ),
+                                  for (final show in uniqueShows)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 6),
+                                      child: _FilterPill(
+                                        label: show,
+                                        isSelected:
+                                            _selectedShowFilter == show,
+                                        onTap: () => _onShowFilterChanged(show),
                                       ),
-                                    );
-                                  }),
+                                    ),
                                 ],
                               ),
                             ),
                           ],
-                        ),
-                      ],
-                      // Active filters indicator
-                      if (_searchQuery.isNotEmpty ||
-                          _selectedShowFilter != null) ...[
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            if (_searchQuery.isNotEmpty)
-                              Chip(
-                                label: Text('Search: $_searchQuery'),
-                                deleteIcon: const Icon(Icons.close, size: 18),
-                                onDeleted: () => _onSearchChanged(''),
-                                backgroundColor:
-                                    theme.colorScheme.primaryContainer,
-                              ),
-                            if (_selectedShowFilter != null)
-                              Chip(
-                                label: Text('Show: $_selectedShowFilter'),
-                                deleteIcon: const Icon(Icons.close, size: 18),
-                                onDeleted: () => _onShowFilterChanged(null),
-                                backgroundColor:
-                                    theme.colorScheme.primaryContainer,
-                              ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Results count
-          if (!_isLoading && _allFavouriteEpisodes.isNotEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                '${_filteredEpisodes.length} of ${_allFavouriteEpisodes.length} favourites',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ),
-          // Episode List
-          Expanded(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: theme.colorScheme.primary,
+                        ],
+                      ),
                     ),
-                  )
-                : _allFavouriteEpisodes.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.favorite_border,
-                              size: 64,
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.3),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No favourites yet',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Tap the heart icon on any episode to add it here',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.3),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _filteredEpisodes.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  size: 64,
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.3),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No matches found',
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5),
+                    Expanded(
+                      child: _filteredEpisodes.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.search_off_rounded,
+                                    size: 40,
+                                    color: AppColors.textMuted,
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextButton.icon(
-                                  onPressed: () {
-                                    _onSearchChanged('');
-                                    _onShowFilterChanged(null);
-                                  },
-                                  icon: const Icon(Icons.clear_all),
-                                  label: const Text('Clear all filters'),
-                                ),
-                              ],
+                                  const SizedBox(height: AppSpacing.md),
+                                  Text(
+                                    'No matches found',
+                                    style: theme.textTheme.titleLarge,
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      _onSearchChanged('');
+                                      _onShowFilterChanged(null);
+                                    },
+                                    icon: const Icon(Icons.clear_all),
+                                    label: const Text('Clear all filters'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: _loadFavourites,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                itemCount: _filteredEpisodes.length,
+                                itemBuilder: (context, index) {
+                                  final episode = _filteredEpisodes[index];
+                                  final show = Show(
+                                    name: episode.show,
+                                    episodes: [episode],
+                                  );
+                                  return EpisodeListItem(
+                                    key: ValueKey(episode.id),
+                                    episode: episode,
+                                    show: show,
+                                    playerService: widget.playerService,
+                                    storageService: widget.storageService,
+                                    onOpenPlayer: widget.onPlayEpisode,
+                                  );
+                                },
+                              ),
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadFavourites,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: _filteredEpisodes.length,
-                              itemBuilder: (context, index) {
-                                final episode = _filteredEpisodes[index];
-                                // Create a minimal Show object for the episode
-                                final show = Show(
-                                  name: episode.show,
-                                  episodes: [episode],
-                                );
-                                return EpisodeListItem(
-                                  key: ValueKey(episode.id),
-                                  episode: episode,
-                                  show: show,
-                                  playerService: widget.playerService,
-                                  storageService: widget.storageService,
-                                  onOpenPlayer: widget.onPlayEpisode,
-                                );
-                              },
-                            ),
-                          ),
+                    ),
+                  ],
+                ),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                  border: Border.all(color: AppColors.outlineStrong),
+                ),
+                child: const Icon(
+                  Icons.favorite_border_rounded,
+                  size: 28,
+                  color: AppColors.signal,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'No favourites yet',
+                style: theme.textTheme.displaySmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Tap the heart icon on any archived episode to save it to your crate.',
+                style: theme.textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isSelected ? AppColors.signal : AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+            border: Border.all(
+              color: isSelected ? AppColors.signal : AppColors.outline,
+            ),
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: isSelected
+                      ? AppColors.onSignal
+                      : AppColors.textSecondary,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+          ),
+        ),
       ),
     );
   }

@@ -20,49 +20,105 @@ class ShowListItem extends StatelessWidget {
     final theme = Theme.of(context);
     final count = show.episodes.length;
     final latest = show.episodes.isEmpty ? null : show.episodes.first.dateLabel;
-    final details = [
-      if (dayLabel != null) dayLabel!,
-      '$count ${count == 1 ? 'episode' : 'episodes'}',
-      if (latest != null) 'latest $latest',
-    ].join(', ');
+    final countLabel = '$count ${count == 1 ? 'episode' : 'episodes'}';
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.outline)),
-        ),
-        child: Row(
-          children: [
-            ShowMonogram(name: show.name, size: 48),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    show.name,
-                    style: theme.textTheme.titleMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    details,
-                    style: theme.textTheme.bodySmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 12,
+          ),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.outline)),
+          ),
+          child: Row(
+            children: [
+              ShowMonogram(name: show.name, size: 52),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      show.name,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (dayLabel != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.signalSurface,
+                              borderRadius: BorderRadius.circular(AppRadii.xs),
+                              border: Border.all(
+                                color: AppColors.signal.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Text(
+                              dayLabel!.toUpperCase(),
+                              style: AppTypography.kicker(
+                                size: 9.5,
+                                color: AppColors.signal,
+                              ),
+                            ),
+                          ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceRaised,
+                            borderRadius: BorderRadius.circular(AppRadii.xs),
+                            border: Border.all(color: AppColors.outline),
+                          ),
+                          child: Text(
+                            countLabel,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        if (latest != null)
+                          Text(
+                            'Latest $latest',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            const Icon(Icons.chevron_right, color: AppColors.textMuted),
-          ],
+              const SizedBox(width: AppSpacing.xs),
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                  border: Border.all(color: AppColors.outline),
+                ),
+                child: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                  size: 18,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -97,11 +153,13 @@ class ShowMonogram extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceRaised,
           borderRadius: BorderRadius.circular(AppRadii.sm),
+          border: Border.all(color: AppColors.outlineStrong),
         ),
         child: Text(
           initialsFor(name),
           style: AppTypography.display(
-            size: size * 0.5,
+            size: size * 0.46,
+            weight: FontWeight.w800,
             color: AppColors.signal,
             height: 1,
           ),
