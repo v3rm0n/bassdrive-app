@@ -119,6 +119,7 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh statistics',
                 onPressed: _loadStats,
               ),
               IconButton(
@@ -137,24 +138,65 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
               : RefreshIndicator(
                   onRefresh: _loadStats,
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                     children: [
-                      Text('Time listened', style: theme.textTheme.bodyMedium),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatDuration(totalTime),
-                        style: AppTypography.display(size: 72, height: 1),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadii.lg),
+                          border: Border.all(color: AppColors.outlineStrong),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'SESSION TELEMETRY',
+                              style: AppTypography.kicker(
+                                size: 10.5,
+                                color: AppColors.signal,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Time listened',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _formatDuration(totalTime),
+                              style: AppTypography.display(
+                                size: 72,
+                                weight: FontWeight.w900,
+                                height: 0.95,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceRaised,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.xs),
+                                border: Border.all(color: AppColors.outline),
+                              ),
+                              child: Text(
+                                _formatDurationDetailed(totalTime),
+                                style: theme.textTheme.labelMedium,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _SplitBar(
+                              live: _liveStreamTime,
+                              archive: _archivesTime,
+                            ),
+                          ],
+                        ),
                       ),
-                      Text(
-                        _formatDurationDetailed(totalTime),
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 32),
-                      _SplitBar(
-                        live: _liveStreamTime,
-                        archive: _archivesTime,
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.md),
                       _buildTimeCard(
                         context,
                         icon: Icons.radio,
@@ -163,6 +205,7 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
                         color: AppColors.onAir,
                         total: totalTime,
                       ),
+                      const SizedBox(height: AppSpacing.sm),
                       _buildTimeCard(
                         context,
                         icon: Icons.library_music,
@@ -171,7 +214,7 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
                         color: AppColors.signal,
                         total: totalTime,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Time counts while audio plays and is stored only on this device.',
                         style: theme.textTheme.bodySmall,
@@ -198,25 +241,37 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
         : '0.0';
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.outline)),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: AppColors.outline),
       ),
       child: Row(
         children: [
           Container(
-            width: 10,
-            height: 10,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              border: Border.all(color: color.withValues(alpha: 0.45)),
             ),
+            child: Icon(icon, size: 18, color: color),
           ),
-          const SizedBox(width: 12),
-          Icon(icon, size: 20, color: AppColors.textMuted),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(title, style: theme.textTheme.titleMedium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 2),
+                Text(
+                  _formatDurationDetailed(duration),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
           ),
           Text(
             _formatDuration(duration),
@@ -225,12 +280,17 @@ class _ListeningStatsScreenState extends State<ListeningStatsScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          SizedBox(
-            width: 56,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceRaised,
+              borderRadius: BorderRadius.circular(AppRadii.xs),
+              border: Border.all(color: AppColors.outline),
+            ),
             child: Text(
               '$percentage%',
               textAlign: TextAlign.end,
-              style: theme.textTheme.labelMedium,
+              style: theme.textTheme.labelMedium?.copyWith(color: color),
             ),
           ),
         ],
@@ -250,7 +310,7 @@ class _SplitBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = live.inSeconds + archive.inSeconds;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadii.sm),
+      borderRadius: BorderRadius.circular(AppRadii.xs),
       child: SizedBox(
         height: 12,
         child: total == 0

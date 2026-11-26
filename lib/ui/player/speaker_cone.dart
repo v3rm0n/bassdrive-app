@@ -104,8 +104,19 @@ class _SpeakerPainter extends CustomPainter {
     final center = size.center(Offset.zero);
     final r = size.shortestSide / 2;
 
-    // Surround: the fixed rubber ring around the cone.
-    final surroundRadius = r * 0.98;
+    // Subtle acoustic halo when active.
+    if (isPlaying) {
+      canvas.drawCircle(
+        center,
+        r * (0.98 + punch * 0.03),
+        Paint()
+          ..color = accent.withValues(alpha: 0.07 + punch * 0.12)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.12),
+      );
+    }
+
+    // Outer chassis ring.
+    final surroundRadius = r * 0.97;
     canvas.drawCircle(
       center,
       surroundRadius,
@@ -116,66 +127,80 @@ class _SpeakerPainter extends CustomPainter {
       surroundRadius,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = r * 0.012
-        ..color = AppColors.outlineStrong,
+        ..strokeWidth = math.max(1.2, r * 0.016)
+        ..color = isPlaying
+            ? Color.lerp(AppColors.outlineStrong, accent, 0.25)!
+            : AppColors.outlineStrong,
     );
 
-    // Bolts around the frame.
-    final boltPaint = Paint()..color = AppColors.outlineStrong;
+    // Inner bezel ring.
+    canvas.drawCircle(
+      center,
+      r * 0.85,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.0, r * 0.008)
+        ..color = AppColors.outline,
+    );
+
+    // Recessed hex bolts around the frame.
+    final boltOuterPaint = Paint()..color = AppColors.surfaceOverlay;
+    final boltInnerPaint = Paint()..color = AppColors.outlineStrong;
     for (var i = 0; i < 8; i++) {
       final a = i * math.pi / 4 + math.pi / 8;
-      canvas.drawCircle(
-        center + Offset(math.cos(a), math.sin(a)) * r * 0.9,
-        r * 0.022,
-        boltPaint,
-      );
+      final pos = center + Offset(math.cos(a), math.sin(a)) * r * 0.905;
+      canvas.drawCircle(pos, r * 0.026, boltOuterPaint);
+      canvas.drawCircle(pos, r * 0.015, boltInnerPaint);
     }
 
     // The cone moves; everything inside it scales with the kick.
-    final excursion = 1 + punch * 0.035;
+    final excursion = 1 + punch * 0.038;
     final coneRadius = r * 0.78 * excursion;
 
+    // Rubber surround roll.
     canvas.drawCircle(
       center,
       r * 0.8,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = r * 0.07
+        ..strokeWidth = r * 0.075
         ..color = AppColors.surfaceRaised,
     );
 
+    // Cone body gradient.
     canvas.drawCircle(
       center,
       coneRadius,
       Paint()
         ..shader = RadialGradient(
           colors: const [
+            AppColors.backgroundDeep,
             AppColors.background,
             AppColors.surface,
             AppColors.surfaceRaised,
           ],
-          stops: const [0.2, 0.7, 1],
+          stops: const [0.15, 0.45, 0.78, 1.0],
         ).createShader(Rect.fromCircle(center: center, radius: coneRadius)),
     );
 
-    // Pressed ridges in the cone paper.
+    // Pressed concentric ridges in the cone paper.
     final ridge = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1, r * 0.006)
-      ..color = AppColors.outline;
-    for (final f in const [0.42, 0.56, 0.7]) {
+      ..strokeWidth = math.max(1, r * 0.007)
+      ..color = AppColors.outline.withValues(alpha: 0.9);
+    for (final f in const [0.38, 0.50, 0.62, 0.72]) {
       canvas.drawCircle(center, r * f * excursion, ridge);
     }
 
-    // Dust cap.
+    // Dust cap & beat glow.
     final capRadius = r * 0.26 * excursion;
     if (isPlaying) {
       canvas.drawCircle(
         center,
-        capRadius * (1.25 + punch * 0.5),
+        capRadius * (1.35 + punch * 0.55),
         Paint()
-          ..color = accent.withValues(alpha: 0.12 + punch * 0.28)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.08),
+          ..color = accent.withValues(alpha: 0.16 + punch * 0.30)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.09),
       );
     }
     canvas.drawCircle(
@@ -185,9 +210,19 @@ class _SpeakerPainter extends CustomPainter {
         ..shader = RadialGradient(
           center: const Alignment(-0.35, -0.4),
           colors: isPlaying
-              ? [Color.lerp(accent, Colors.white, 0.35)!, accent]
+              ? [Color.lerp(accent, Colors.white, 0.42)!, accent]
               : const [AppColors.outlineStrong, AppColors.surfaceOverlay],
         ).createShader(Rect.fromCircle(center: center, radius: capRadius)),
+    );
+    canvas.drawCircle(
+      center,
+      capRadius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.0, r * 0.008)
+        ..color = isPlaying
+            ? Colors.white.withValues(alpha: 0.25)
+            : AppColors.outlineStrong,
     );
   }
 

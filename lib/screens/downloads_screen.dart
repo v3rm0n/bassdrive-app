@@ -3,6 +3,7 @@ import '../models/episode.dart';
 import '../services/audio_player_service.dart';
 import '../services/download_service.dart';
 import '../services/storage_service.dart';
+import '../ui/theme/app_theme_tokens.dart';
 import '../widgets/episode_list_item.dart';
 
 class DownloadsScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class DownloadsScreen extends StatefulWidget {
 }
 
 class _DownloadsScreenState extends State<DownloadsScreen> {
+  static const int _maxStorageBytes = 2 * 1024 * 1024 * 1024; // 2 GB limit
   final DownloadService _downloadService = DownloadService();
 
   @override
@@ -122,56 +124,89 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     final downloadedEpisodes = _downloadService.downloadedEpisodes.values
         .toList()
       ..sort((a, b) => b.downloadedAt.compareTo(a.downloadedAt));
+    final totalBytes = _downloadService.totalDownloadedBytes;
+    final usageRatio = (totalBytes / _maxStorageBytes).clamp(0.0, 1.0);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Downloads'),
         actions: [
           if (downloadedEpisodes.isNotEmpty)
-            TextButton.icon(
-              onPressed: _deleteAllDownloads,
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('Delete All'),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.xs),
+              child: TextButton.icon(
+                onPressed: _deleteAllDownloads,
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: const Text('Delete All'),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
               ),
             ),
         ],
       ),
       body: Column(
         children: [
-          // Storage info card
+          // Studio storage telemetry card
           Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadii.md),
+              border: Border.all(color: AppColors.outlineStrong),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.storage,
-                  size: 32,
-                  color: theme.colorScheme.primary,
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceRaised,
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                        border: Border.all(color: AppColors.outline),
+                      ),
+                      child: const Icon(
+                        Icons.storage_rounded,
+                        size: 20,
+                        color: AppColors.signal,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'OFFLINE STORAGE VAULT',
+                            style: AppTypography.kicker(
+                              size: 10,
+                              color: AppColors.signal,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${downloadedEpisodes.length} episodes / ${_formatStorageSize(totalBytes)} of 2.0 GB',
+                            style: theme.textTheme.titleSmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Storage Used',
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${downloadedEpisodes.length} episodes • ${_formatStorageSize(_downloadService.totalDownloadedBytes)}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadii.xs),
+                  child: LinearProgressIndicator(
+                    value: usageRatio,
+                    minHeight: 5,
+                    backgroundColor: AppColors.outline,
+                    color: usageRatio > 0.85
+                        ? AppColors.onAir
+                        : AppColors.signal,
                   ),
                 ),
               ],
@@ -181,32 +216,48 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
           Expanded(
             child: downloadedEpisodes.isEmpty
                 ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.download_done,
-                          size: 64,
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.5),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 380),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.lg),
+                                border:
+                                    Border.all(color: AppColors.outlineStrong),
+                              ),
+                              child: const Icon(
+                                Icons.download_done_rounded,
+                                size: 28,
+                                color: AppColors.signal,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            Text(
+                              'No Downloads',
+                              style: theme.textTheme.displaySmall,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Episodes you play will be automatically downloaded for offline listening.',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No Downloads',
-                          style: theme.textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Episodes you play will be automatically\ndownloaded for offline listening',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   )
                 : ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 16),
                     itemCount: downloadedEpisodes.length,
                     itemBuilder: (context, index) {
                       final downloaded = downloadedEpisodes[index];
@@ -234,7 +285,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                             downloaded.episodeId,
                             downloaded.episodeName,
                           );
-                          return false; // We handle deletion manually
+                          return false;
                         },
                         child: EpisodeListItem(
                           key: ValueKey(episode.id),
@@ -245,15 +296,28 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                downloaded.formattedFileSize,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceRaised,
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadii.xs),
+                                  border: Border.all(color: AppColors.outline),
+                                ),
+                                child: Text(
+                                  downloaded.formattedFileSize,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
                               IconButton(
                                 icon: const Icon(Icons.delete_outline),
+                                tooltip: 'Delete download',
                                 onPressed: () => _deleteDownload(
                                   downloaded.episodeId,
                                   downloaded.episodeName,

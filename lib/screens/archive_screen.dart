@@ -3,6 +3,7 @@ import '../models/archive_day.dart';
 import '../models/show.dart';
 import '../services/audio_player_service.dart';
 import '../services/storage_service.dart';
+import '../ui/theme/app_theme_tokens.dart';
 import '../widgets/show_list_item.dart';
 import 'show_detail_screen.dart';
 
@@ -61,6 +62,14 @@ class _ArchiveScreenState extends State<ArchiveScreen>
     super.dispose();
   }
 
+  int get _totalShowsCount {
+    var total = 0;
+    for (final entry in widget.archive.values) {
+      total += entry.shows.length;
+    }
+    return total;
+  }
+
   List<MapEntry<String, Show>> _getAllFilteredShows() {
     if (_searchQuery.isEmpty) return [];
 
@@ -96,6 +105,29 @@ class _ArchiveScreenState extends State<ArchiveScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Archive'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.md),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 5,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+                border: Border.all(color: AppColors.outline),
+              ),
+              child: Text(
+                '$_totalShowsCount SHOWS / 7 DAYS',
+                style: AppTypography.kicker(
+                  size: 10,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ],
         bottom: _isSearching
             ? null
             : TabBar(
@@ -112,8 +144,17 @@ class _ArchiveScreenState extends State<ArchiveScreen>
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          Container(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            decoration: const BoxDecoration(
+              color: AppColors.background,
+              border: Border(bottom: BorderSide(color: AppColors.outline)),
+            ),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -166,28 +207,66 @@ class _ArchiveScreenState extends State<ArchiveScreen>
                         );
                       }
 
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        itemCount: filteredShows.length,
-                        itemBuilder: (context, index) {
-                          final show = filteredShows[index];
-                          return ShowListItem(
-                            show: show,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ShowDetailScreen(
-                                    show: show,
-                                    playerService: widget.playerService,
-                                    storageService: widget.storageService,
-                                    onPlayEpisode: widget.onPlayEpisode,
+                      return Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: 8,
+                            ),
+                            decoration: const BoxDecoration(
+                              color: AppColors.surface,
+                              border: Border(
+                                bottom: BorderSide(color: AppColors.outline),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${day.toUpperCase()} SCHEDULE',
+                                  style: AppTypography.kicker(
+                                    size: 10.5,
+                                    color: AppColors.signal,
                                   ),
                                 ),
-                              );
-                            },
-                          );
-                        },
+                                Text(
+                                  '${filteredShows.length} ${filteredShows.length == 1 ? 'SHOW' : 'SHOWS'}',
+                                  style: AppTypography.kicker(
+                                    size: 10.5,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              itemCount: filteredShows.length,
+                              itemBuilder: (context, index) {
+                                final show = filteredShows[index];
+                                return ShowListItem(
+                                  show: show,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ShowDetailScreen(
+                                          show: show,
+                                          playerService: widget.playerService,
+                                          storageService: widget.storageService,
+                                          onPlayEpisode: widget.onPlayEpisode,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       );
                     }).toList(),
                   ),

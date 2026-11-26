@@ -46,6 +46,17 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
         .toList();
   }
 
+  Future<void> _playLatest() async {
+    if (widget.show.episodes.isEmpty) return;
+    final latest = widget.show.episodes.first;
+    await widget.playerService.playEpisode(latest);
+    if (!mounted) return;
+    if (ModalRoute.of(context)?.isCurrent == true) {
+      Navigator.pop(context);
+      widget.onPlayEpisode?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -55,18 +66,55 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
       color: AppColors.background,
       child: ReadableWidth(
         child: Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(
+            title: Text(
+              'SHOW ARCHIVE',
+              style: AppTypography.kicker(
+                size: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            actions: [
+              if (widget.show.episodes.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  child: TextButton.icon(
+                    onPressed: _playLatest,
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.signalSurface,
+                      foregroundColor: AppColors.signal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 6,
+                      ),
+                    ),
+                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                    label: Text(
+                      'Play latest',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: AppColors.signal,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           body: Column(
             children: [
-              Padding(
+              Container(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                decoration: const BoxDecoration(
+                  color: AppColors.background,
+                  border: Border(bottom: BorderSide(color: AppColors.outline)),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ShowMonogram(name: widget.show.name, size: 72),
+                        ShowMonogram(name: widget.show.name, size: 74),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -78,10 +126,30 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${widget.show.episodes.length} episodes in the archive',
-                                style: theme.textTheme.bodyMedium,
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceRaised,
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.xs),
+                                      border: Border.all(
+                                          color: AppColors.outline),
+                                    ),
+                                    child: Text(
+                                      '${widget.show.episodes.length} episodes in the archive',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -116,7 +184,6 @@ class _ShowDetailScreenState extends State<ShowDetailScreen> {
                   ],
                 ),
               ),
-              const Divider(),
               Expanded(
                 child: filteredEpisodes.isEmpty
                     ? Center(

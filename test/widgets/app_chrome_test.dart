@@ -192,6 +192,60 @@ void main() {
     await tester.pump();
     expect(selectedIndex, 0);
   });
+
+  testWidgets('MiniPlayer dock appears on browse tabs while audio is active', (
+    tester,
+  ) async {
+    final api = _PendingApiService();
+    final player = _FakeAudioPlayerService();
+    final mix = Episode(
+      name: '[2026.11.16] Midnight mix',
+      show: 'Night shift',
+      url: 'https://example.com/mix',
+      encodedUrl: 'https://example.com/mix',
+    );
+    api._completer.complete(
+      ApiResponse(
+        live: 'https://example.com/live',
+        archive: {
+          'Monday': ArchiveDay(
+            day: 'Monday',
+            shows: [
+              Show(name: mix.show, episodes: [mix]),
+            ],
+          ),
+        },
+      ),
+    );
+
+    await player.playEpisode(mix);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: HomeScreen(
+          apiService: api,
+          playerService: player,
+          storageService: StorageService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // On Live tab (index 0), MiniPlayer is hidden.
+    expect(find.text('ARCHIVE DECK'), findsNothing);
+
+    // On Archive tab (index 1), MiniPlayer dock is visible.
+    await tester.tap(find.text('Archive'));
+    await tester.pumpAndSettle();
+    expect(find.text('ARCHIVE DECK'), findsOneWidget);
+
+    // Tapping the MiniPlayer dock opens FullPlayer (index 2) and hides MiniPlayer.
+    await tester.tap(find.text('ARCHIVE DECK'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FullPlayer), findsOneWidget);
+    expect(find.text('ARCHIVE DECK'), findsNothing);
+  });
 }
 
 class _PendingApiService extends ApiService {
