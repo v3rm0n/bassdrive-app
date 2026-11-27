@@ -53,8 +53,8 @@ Every release builds three Windows artifacts automatically:
 - `Bassdrive-Radio-Windows.zip` (portable archive)
 
 ### Microsoft Store ($0 Free — removes SmartScreen warnings automatically)
-1. Register a free individual developer account at [Microsoft Partner Center](https://partner.microsoft.com/dashboard) (ID verification only, no credit card).
-2. Reserve the app name **Bassdrive Radio** and note your **Package/Identity/Name** and **Package/Identity/Publisher** (`CN=...`) from **Product management → Product Identity**.
+1. Register a free individual developer account at [storedeveloper.microsoft.com](https://storedeveloper.microsoft.com) (personal Microsoft Account + ID/selfie verification, no credit card).
+2. Reserve the app name **Bassdrive Radio** in Partner Center and note your **Package/Identity/Name** and **Package/Identity/Publisher** (`CN=...`) under **Product management → Product Identity**.
 3. Add two GitHub secrets so CI builds a Store-ready MSIX automatically:
    - `WINDOWS_STORE_IDENTITY_NAME`
    - `WINDOWS_STORE_PUBLISHER`

@@ -19,7 +19,7 @@ install -m 644 packaging/linux/io.maido.bassdrive.desktop \
 install -m 644 packaging/linux/io.maido.bassdrive.desktop \
   "$APPDIR/usr/share/applications/io.maido.bassdrive.desktop"
 install -m 644 packaging/linux/io.maido.bassdrive.metainfo.xml \
-  "$APPDIR/usr/share/metainfo/io.maido.bassdrive.metainfo.xml"
+  "$APPDIR/usr/share/metainfo/io.maido.bassdrive.appdata.xml"
 install -m 644 assets/icon/icon.png "$APPDIR/io.maido.bassdrive.png"
 install -m 644 assets/icon/icon.png \
   "$APPDIR/usr/share/icons/hicolor/512x512/apps/io.maido.bassdrive.png"

@@ -16,6 +16,12 @@ A cross-platform application for listening to Bassdrive Internet radio (24/7 Dru
 
 Portable Windows `.zip`, Windows `.msix`, Linux `.tar.gz`, Android Play `.aab`, and checksums are also attached to every [GitHub Release](https://github.com/v3rm0n/bassdrive-app/releases/latest). See [docs/distribution.md](docs/distribution.md) for signing, store publishing, and package manager setup.
 
+Or install on macOS via Homebrew:
+
+```bash
+brew install --cask v3rm0n/tap/bassdrive-radio
+```
+
 <p float="left">
   <img src="/screenshots/IMAGE1.PNG" width="24%" />
   <img src="/screenshots/IMAGE2.PNG" width="24%" /> 
