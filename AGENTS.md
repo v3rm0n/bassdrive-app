@@ -217,7 +217,7 @@ flutter test test/readme_screenshots_test.dart --update-goldens --dart-define=SC
   - Runs `flutter analyze` and `flutter test`
   - Builds Android (APK + AAB), macOS (DMG), iOS (compile check or signed IPA + TestFlight), Windows (Setup EXE + MSIX + ZIP), and Linux (AppImage + DEB + tar.gz)
   - Publishes artifacts + `SHA256SUMS.txt` to GitHub Releases (and optional Winget submission)
-- Web workflow: `.github/workflows/web.yml` (deploys PWA to GitHub Pages on `main` and `vX.Y.Z` tags)
+- Web workflow: `.github/workflows/web.yml` (deploys PWA to GitHub Pages on `main`)
 - Full signing and store submission steps: `docs/distribution.md`
 
 ---
