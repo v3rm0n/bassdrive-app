@@ -2,7 +2,7 @@
 ; Build in CI via: iscc /DAppVersion=0.3.0 packaging\windows\bassdrive_setup.iss
 
 #ifndef AppVersion
-  #define AppVersion "0.3.0"
+  #define AppVersion "0.4.0"
 #endif
 
 #define AppName "Bassdrive Radio"
