@@ -1,4 +1,4 @@
-package com.bassdrive.bassdrive_radio
+package io.maido.bassdrive
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

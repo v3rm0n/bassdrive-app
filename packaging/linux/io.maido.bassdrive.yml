@@ -1,0 +1,51 @@
+# Flatpak manifest for Bassdrive Radio (io.maido.bassdrive).
+# Packages the prebuilt Linux release bundle alongside libmpv.
+# Before building locally or submitting to Flathub, update the URL and sha256
+# to match the target GitHub Release tag.
+app-id: io.maido.bassdrive
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: bassdrive_radio
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --device=dri
+
+modules:
+  - name: libmpv
+    buildsystem: meson
+    config-opts:
+      - -Dlibmpv=true
+      - -Dcplayer=false
+      - -Dmanpage-build=disabled
+    sources:
+      - type: archive
+        url: https://github.com/mpv-player/mpv/archive/refs/tags/v0.39.0.tar.gz
+        sha256: 2ca92437affb62c2b559b4419ea4785c70d023590500e8a52e95ea3ab4554683
+
+  - name: bassdrive-radio
+    buildsystem: simple
+    build-commands:
+      - install -d /app/bassdrive-radio /app/bin
+      - cp -r bundle/* /app/bassdrive-radio/
+      - ln -s /app/bassdrive-radio/bassdrive_radio /app/bin/bassdrive_radio
+      - install -Dm644 io.maido.bassdrive.desktop /app/share/applications/io.maido.bassdrive.desktop
+      - install -Dm644 io.maido.bassdrive.metainfo.xml /app/share/metainfo/io.maido.bassdrive.metainfo.xml
+      - install -Dm644 icon.png /app/share/icons/hicolor/512x512/apps/io.maido.bassdrive.png
+    sources:
+      - type: archive
+        dest: bundle
+        strip-components: 0
+        url: https://github.com/v3rm0n/bassdrive-app/releases/download/v0.3.0/Bassdrive-Radio-Linux.tar.gz
+        sha256: REPLACE_WITH_RELEASE_TARBALL_SHA256
+      - type: file
+        path: io.maido.bassdrive.desktop
+      - type: file
+        path: io.maido.bassdrive.metainfo.xml
+      - type: file
+        path: ../../assets/icon/icon.png

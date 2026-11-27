@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/episode.dart';
+import 'local_file_store.dart';
 
 class DownloadedEpisode {
   final String episodeId;
@@ -89,9 +88,11 @@ class DownloadService extends ChangeNotifier {
   factory DownloadService() => _instance;
   DownloadService._internal();
 
+  static bool get isSupported => LocalFileStore.isSupported;
+
   final Dio _dio = Dio();
   SharedPreferences? _prefs;
-  Directory? _downloadsDir;
+  String? _downloadsDirPath;
 
   final Map<String, DownloadProgress> _downloadProgress = {};
   final Map<String, DownloadedEpisode> _downloadedEpisodes = {};
@@ -108,19 +109,17 @@ class DownloadService extends ChangeNotifier {
 
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
+    if (!isSupported) return;
     await _initDownloadsDirectory();
     await _loadDownloadedEpisodes();
   }
 
   Future<void> _initDownloadsDirectory() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    _downloadsDir = Directory('${appDir.path}/downloads');
-    if (!await _downloadsDir!.exists()) {
-      await _downloadsDir!.create(recursive: true);
-    }
+    _downloadsDirPath = await LocalFileStore.getDownloadsDirPath();
   }
 
   Future<void> _loadDownloadedEpisodes() async {
+    if (!isSupported) return;
     if (_prefs == null) await initialize();
 
     final jsonString = _prefs!.getString(_downloadsKey);
@@ -131,8 +130,7 @@ class DownloadService extends ChangeNotifier {
           final episode =
               DownloadedEpisode.fromJson(item as Map<String, dynamic>);
           // Verify file still exists
-          final file = File(episode.localPath);
-          if (await file.exists()) {
+          if (await LocalFileStore.fileExists(episode.localPath)) {
             _downloadedEpisodes[episode.episodeId] = episode;
           }
         }
@@ -155,10 +153,10 @@ class DownloadService extends ChangeNotifier {
   }
 
   Future<String?> getLocalPath(String episodeId) async {
+    if (!isSupported) return null;
     final episode = _downloadedEpisodes[episodeId];
     if (episode != null) {
-      final file = File(episode.localPath);
-      if (await file.exists()) {
+      if (await LocalFileStore.fileExists(episode.localPath)) {
         return episode.localPath;
       }
       // File was deleted, remove from tracking
@@ -171,6 +169,10 @@ class DownloadService extends ChangeNotifier {
 
   Future<void> downloadEpisode(Episode episode,
       {DownloadType type = DownloadType.manual}) async {
+    if (!isSupported || _downloadsDirPath == null) {
+      return;
+    }
+
     if (_downloadedEpisodes.containsKey(episode.id)) {
       return; // Already downloaded
     }
@@ -206,7 +208,7 @@ class DownloadService extends ChangeNotifier {
     try {
       final fileName =
           '${episode.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.mp3';
-      final localPath = '${_downloadsDir!.path}/$fileName';
+      final localPath = '$_downloadsDirPath/$fileName';
 
       await _dio.download(
         episode.encodedUrl,
@@ -225,8 +227,7 @@ class DownloadService extends ChangeNotifier {
         },
       );
 
-      final file = File(localPath);
-      final fileSize = await file.length();
+      final fileSize = await LocalFileStore.fileLength(localPath);
 
       final downloadedEpisode = DownloadedEpisode(
         episodeId: episode.id,
@@ -268,11 +269,8 @@ class DownloadService extends ChangeNotifier {
       try {
         final fileName =
             '${episode.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.mp3';
-        final localPath = '${_downloadsDir!.path}/$fileName';
-        final file = File(localPath);
-        if (await file.exists()) {
-          await file.delete();
-        }
+        final localPath = '$_downloadsDirPath/$fileName';
+        await LocalFileStore.deleteFile(localPath);
       } catch (_) {}
     } finally {
       _cancelTokens.remove(episode.id);
@@ -306,10 +304,7 @@ class DownloadService extends ChangeNotifier {
     final episode = _downloadedEpisodes[episodeId];
     if (episode != null) {
       try {
-        final file = File(episode.localPath);
-        if (await file.exists()) {
-          await file.delete();
-        }
+        await LocalFileStore.deleteFile(episode.localPath);
       } catch (e) {
         debugPrint('Error deleting file: $e');
       }
@@ -332,10 +327,7 @@ class DownloadService extends ChangeNotifier {
 
     for (final episode in _downloadedEpisodes.values) {
       try {
-        final file = File(episode.localPath);
-        if (await file.exists()) {
-          await file.delete();
-        }
+        await LocalFileStore.deleteFile(episode.localPath);
       } catch (e) {
         debugPrint('Error deleting file: $e');
       }

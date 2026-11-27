@@ -339,7 +339,8 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildDownloadButton(theme),
+                      if (DownloadService.isSupported)
+                        _buildDownloadButton(theme),
                       IconButton(
                         icon: Icon(
                           _isFavourite

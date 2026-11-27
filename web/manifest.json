@@ -1,12 +1,12 @@
 {
-    "name": "bassdrive_radio",
-    "short_name": "bassdrive_radio",
+    "name": "Bassdrive Radio",
+    "short_name": "Bassdrive",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#15111F",
     "theme_color": "#15111F",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "description": "Stream Bassdrive 24/7 Drum & Bass radio and archived shows.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

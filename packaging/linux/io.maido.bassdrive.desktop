@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Bassdrive Radio
+GenericName=Internet Radio Player
+Comment=Stream Bassdrive 24/7 Drum & Bass radio and archived shows
+Exec=bassdrive_radio
+Icon=io.maido.bassdrive
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+Keywords=radio;drum and bass;dnb;bassdrive;music;stream;
+StartupWMClass=io.maido.bassdrive

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.maido.bassdrive</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Bassdrive Radio</name>
+  <summary>Stream Bassdrive 24/7 Drum &amp; Bass radio and archived shows</summary>
+  <developer id="io.maido">
+    <name>Maido</name>
+  </developer>
+  <description>
+    <p>
+      Bassdrive Radio is an open-source player for Bassdrive Internet radio
+      (24/7 Drum &amp; Bass) and its weekly show archive.
+    </p>
+    <ul>
+      <li>Listen to the 24/7 live broadcast with live show metadata</li>
+      <li>Browse archived shows by broadcast day with instant search</li>
+      <li>Save favourite episodes and automatically resume where you left off</li>
+      <li>Cache episodes for offline listening with storage management</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.maido.bassdrive.desktop</launchable>
+  <url type="homepage">https://github.com/v3rm0n/bassdrive-app</url>
+  <url type="bugtracker">https://github.com/v3rm0n/bassdrive-app/issues</url>
+  <url type="vcs-browser">https://github.com/v3rm0n/bassdrive-app</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Studio console desktop view</caption>
+      <image>https://raw.githubusercontent.com/v3rm0n/bassdrive-app/main/screenshots/DESKTOP.PNG</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1" />
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Player</category>
+  </categories>
+</component>

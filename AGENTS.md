@@ -202,24 +202,23 @@ flutter test test/readme_screenshots_test.dart --update-goldens --dart-define=SC
 
 | Platform | App Status | Notes |
 |----------|------------|-------|
-| iOS | Supported | Requires macOS + Xcode to build locally |
-| Android | Supported | APK builds |
-| macOS | Supported | DMG artifact in CI |
-| Windows | Supported | ZIP artifact in CI |
-| Linux | Supported | tar.gz artifact in CI |
+| iOS | Supported | Built in CI (unsigned check or signed IPA + TestFlight when secrets are set) |
+| Android | Supported | APK + Play Store AAB builds in CI (signed via `android/key.properties` or CI secrets) |
+| macOS | Supported | DMG artifact in CI (Developer ID signed + notarized when Apple secrets are set) |
+| Windows | Supported | Inno Setup `.exe`, `.msix`, and `.zip` artifacts in CI |
+| Linux | Supported | AppImage, `.deb`, and `.tar.gz` in CI; uses `just_audio_media_kit` + `media_kit_libs_linux` |
+| Web (PWA) | Supported | Deployed to GitHub Pages via `.github/workflows/web.yml`; offline downloads disabled on web |
 
 ---
 
 ## CI/CD
 
-GitHub Actions workflow: `.github/workflows/release.yml`
-
-- Triggered by version tags matching `vX.Y.Z`
-- Runs `flutter analyze` and `flutter test`
-- Builds release artifacts for Android, macOS, Windows, Linux
-- Creates a GitHub release with generated notes and attached artifacts
-
-Note: iOS is not built in CI currently.
+- Release workflow: `.github/workflows/release.yml` (triggered by `vX.Y.Z` tags or `workflow_dispatch`)
+  - Runs `flutter analyze` and `flutter test`
+  - Builds Android (APK + AAB), macOS (DMG), iOS (compile check or signed IPA + TestFlight), Windows (Setup EXE + MSIX + ZIP), and Linux (AppImage + DEB + tar.gz)
+  - Publishes artifacts + `SHA256SUMS.txt` to GitHub Releases (and optional Winget submission)
+- Web workflow: `.github/workflows/web.yml` (deploys PWA to GitHub Pages on `main` and `vX.Y.Z` tags)
+- Full signing and store submission steps: `docs/distribution.md`
 
 ---
 

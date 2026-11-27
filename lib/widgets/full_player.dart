@@ -230,7 +230,9 @@ class _FullPlayerState extends State<FullPlayer> {
                                 TrackMetaBlock(
                                   title: viewState.title,
                                   subtitle: isReadyState && !liveAvailable
-                                      ? 'Choose an episode from Downloads'
+                                      ? (DownloadService.isSupported
+                                          ? 'Choose an episode from Downloads'
+                                          : 'Check your connection and try again')
                                       : viewState.subtitle,
                                   detail: viewState.detail,
                                   scale: scale,

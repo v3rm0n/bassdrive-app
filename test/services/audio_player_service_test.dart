@@ -82,6 +82,19 @@ void main() {
     expect(service.isLive, isTrue);
     expect(downloads.autoDownloads, isEmpty);
   });
+
+  test('normalizeStreamUrl upgrades Bassdrive archive HTTP links to HTTPS', () {
+    expect(
+      AudioPlayerService.normalizeStreamUrl(
+        'http://archives.bassdrivearchive.com/1%20-%20Monday/Show/mix.mp3',
+      ),
+      'https://archives.bassdrivearchive.com/1%20-%20Monday/Show/mix.mp3',
+    );
+    expect(
+      AudioPlayerService.normalizeStreamUrl('https://bassdrive.radioca.st/stream'),
+      'https://bassdrive.radioca.st/stream',
+    );
+  });
 }
 
 class _AudioBackend extends Fake implements audio.AudioPlayer {

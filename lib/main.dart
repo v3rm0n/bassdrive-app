@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'models/api_response.dart';
 import 'models/listening_progress.dart';
 import 'services/api_service.dart';
@@ -34,8 +35,18 @@ void main() async {
     }
   });
 
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.linux) {
+    JustAudioMediaKit.ensureInitialized(
+      linux: true,
+      windows: false,
+      android: false,
+      iOS: false,
+      macOS: false,
+    );
+  }
+
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.bassdrive.radio.channel.audio',
+    androidNotificationChannelId: 'io.maido.bassdrive.channel.audio',
     androidNotificationChannelName: 'Bassdrive Radio',
     androidNotificationOngoing: true,
   );
@@ -318,38 +329,39 @@ class _HomeScreenState extends State<HomeScreen> {
       };
     }
 
-    final destinations = const [
-      NavigationItem(
+    final destinations = [
+      const NavigationItem(
         icon: Icons.radio_outlined,
         selectedIcon: Icons.radio,
         label: 'Live',
         index: 0,
       ),
-      NavigationItem(
+      const NavigationItem(
         icon: Icons.library_music_outlined,
         selectedIcon: Icons.library_music,
         label: 'Archive',
         index: 1,
       ),
-      NavigationItem(
+      const NavigationItem(
         icon: Icons.play_circle_outline,
         selectedIcon: Icons.play_circle_filled,
         label: 'Player',
         index: 2,
         isProminent: true,
       ),
-      NavigationItem(
+      const NavigationItem(
         icon: Icons.favorite_outline,
         selectedIcon: Icons.favorite,
         label: 'Favourites',
         index: 3,
       ),
-      NavigationItem(
-        icon: Icons.download_outlined,
-        selectedIcon: Icons.download,
-        label: 'Downloads',
-        index: 4,
-      ),
+      if (DownloadService.isSupported)
+        const NavigationItem(
+          icon: Icons.download_outlined,
+          selectedIcon: Icons.download,
+          label: 'Downloads',
+          index: 4,
+        ),
     ];
 
     final hasActiveAudio =
