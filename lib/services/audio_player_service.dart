@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
@@ -96,7 +96,8 @@ class AudioPlayerService extends ChangeNotifier {
   void _updatePlayerState(ProcessingState processing, bool playing) {
     _state = switch (processing) {
       ProcessingState.loading => PlayerState.loading,
-      ProcessingState.buffering => PlayerState.buffering,
+      ProcessingState.buffering =>
+        playing ? PlayerState.buffering : PlayerState.paused,
       ProcessingState.ready =>
         playing ? PlayerState.playing : PlayerState.paused,
       ProcessingState.completed || ProcessingState.idle => PlayerState.idle,
@@ -239,7 +240,22 @@ class AudioPlayerService extends ChangeNotifier {
     try {
       await _player.play();
     } catch (e) {
-      if (request == _request) _reportError(e);
+      if (request != _request) return;
+      // A browser can expire the original tap while the episode loads.
+      // Keep the loaded source so the player's Play button can start it.
+      if (kIsWeb && !hasError && e.toString().contains('NotAllowedError')) {
+        try {
+          await _player.pause();
+        } catch (pauseError) {
+          if (request == _request) _reportError(pauseError);
+          return;
+        }
+        if (request == _request && !hasError) {
+          _updatePlayerState(ProcessingState.ready, false);
+        }
+        return;
+      }
+      _reportError(e);
     }
   }
 

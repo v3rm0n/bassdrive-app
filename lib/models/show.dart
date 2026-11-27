@@ -9,6 +9,11 @@ class Show {
   factory Show.fromJson(Map<String, dynamic> json) {
     final episodesList = (json['episodes'] as List)
         .map((e) => Episode.fromJson(e as Map<String, dynamic>))
+        .where((episode) {
+          // The archive index also lists folders and text files.
+          final path = Uri.parse(episode.encodedUrl).path.toLowerCase();
+          return !path.endsWith('/') && !path.endsWith('.txt');
+        })
         .toList();
 
     episodesList.sort((a, b) {
