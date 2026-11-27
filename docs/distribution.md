@@ -9,7 +9,7 @@ Every platform builds automatically in [`.github/workflows/release.yml`](../.git
 
 1. In GitHub repo **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.
 2. Merge to `main` (or trigger **Deploy Web PWA** manually in the Actions tab).
-3. The PWA deploys to `https://v3rm0n.github.io/bassdrive-app/`.
+3. The PWA deploys to `https://enum.ee/bassdrive-app/` (and `https://v3rm0n.github.io/bassdrive-app/` redirects there).
 
 **Optional enhancement (live track title in browsers):**
 `https://www.bassdrive.com/now-playing.php` does not send CORS headers, so browsers ignore it and fall back to `"Worldwide drum & bass, around the clock"`. To show live track info on Web too, include `"nowPlaying"` in `https://bd.maido.io/api.json` or proxy it from `bd.maido.io` with `Access-Control-Allow-Origin: *`.

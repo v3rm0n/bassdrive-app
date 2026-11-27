@@ -7,7 +7,7 @@ A cross-platform application for listening to Bassdrive Internet radio (24/7 Dru
 
 ## Downloads
 
-[![Web PWA](https://img.shields.io/badge/Web_PWA-15111F?style=for-the-badge&logo=googlechrome&logoColor=white)](https://v3rm0n.github.io/bassdrive-app/)
+[![Web PWA](https://img.shields.io/badge/Web_PWA-15111F?style=for-the-badge&logo=googlechrome&logoColor=white)](https://enum.ee/bassdrive-app/)
 [![Android APK](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/app-release.apk)
 [![macOS DMG](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-macOS.dmg)
 [![Windows Installer](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Windows-Setup.exe)
