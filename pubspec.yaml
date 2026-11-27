@@ -1,5 +1,5 @@
 name: bassdrive_radio
-description: "A new Flutter project."
+description: "Stream Bassdrive 24/7 Drum & Bass radio and archived shows across mobile, desktop, and web."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,6 +34,8 @@ dependencies:
   # Audio playback
   just_audio: ^0.10.6
   just_audio_windows: ^0.2.3
+  just_audio_media_kit: ^2.1.0
+  media_kit_libs_linux: ^1.2.1
   audio_service: ^0.18.19
   just_audio_background: ^0.0.1-beta.17
 
@@ -62,6 +64,18 @@ dev_dependencies:
 
   # App icon generator
   flutter_launcher_icons: ^0.14.4
+
+  # Windows MSIX packager (Microsoft Store & direct install)
+  msix: ^3.18.0
+
+msix_config:
+  display_name: Bassdrive Radio
+  publisher_display_name: Maido
+  identity_name: io.maido.bassdrive
+  msix_version: 0.3.0.9
+  logo_path: assets/icon/icon.png
+  capabilities: internetClient
+  store: false
 
 flutter_launcher_icons:
   android: true

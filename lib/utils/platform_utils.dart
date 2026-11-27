@@ -1,45 +1,33 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
+
+import 'platform_info.dart';
 
 class PlatformUtils {
   /// Forces the desktop or mobile layout, for tests and screenshots.
   @visibleForTesting
   static bool? debugIsDesktopOverride;
 
+  static bool get isWeb => kIsWeb;
+
   static bool get isDesktop {
     final override = debugIsDesktopOverride;
     if (override != null) return override;
     if (kIsWeb) return false;
-    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+    return platformIsMacOS || platformIsWindows || platformIsLinux;
   }
 
   static bool get isMobile {
     if (kIsWeb) return false;
-    return Platform.isIOS || Platform.isAndroid;
+    return platformIsIOS || platformIsAndroid;
   }
 
-  static bool get isMacOS {
-    if (kIsWeb) return false;
-    return Platform.isMacOS;
-  }
+  static bool get isMacOS => !kIsWeb && platformIsMacOS;
 
-  static bool get isWindows {
-    if (kIsWeb) return false;
-    return Platform.isWindows;
-  }
+  static bool get isWindows => !kIsWeb && platformIsWindows;
 
-  static bool get isLinux {
-    if (kIsWeb) return false;
-    return Platform.isLinux;
-  }
+  static bool get isLinux => !kIsWeb && platformIsLinux;
 
-  static bool get isIOS {
-    if (kIsWeb) return false;
-    return Platform.isIOS;
-  }
+  static bool get isIOS => !kIsWeb && platformIsIOS;
 
-  static bool get isAndroid {
-    if (kIsWeb) return false;
-    return Platform.isAndroid;
-  }
+  static bool get isAndroid => !kIsWeb && platformIsAndroid;
 }

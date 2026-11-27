@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
-import 'package:path_provider/path_provider.dart';
 import '../models/episode.dart';
 import '../services/storage_service.dart';
 import '../services/download_service.dart';
+import '../services/local_file_store.dart';
 
 enum PlayerState { idle, loading, playing, paused, buffering, error }
 
@@ -45,23 +44,32 @@ class AudioPlayerService extends ChangeNotifier {
   // Prepare artwork for iOS lock screen by copying asset to temp file
   Future<void> _prepareArtwork() async {
     if (_artworkPrepared) return;
+    if (!LocalFileStore.isSupported) {
+      _artworkPrepared = true;
+      return;
+    }
 
     try {
       final byteData = await rootBundle.load('assets/icon/icon.png');
       final bytes = byteData.buffer.asUint8List();
-
-      final tempDir = await getTemporaryDirectory();
-      final artworkFile = File('${tempDir.path}/bassdrive_artwork.png');
-
-      if (!await artworkFile.exists()) {
-        await artworkFile.writeAsBytes(bytes);
-      }
-
-      _artworkUri = Uri.file(artworkFile.path);
+      _artworkUri = await LocalFileStore.writeTempAssetFile(
+        'bassdrive_artwork.png',
+        bytes,
+      );
       _artworkPrepared = true;
     } catch (e) {
       debugPrint('Failed to prepare artwork: $e');
     }
+  }
+
+  /// Upgrades known Bassdrive archive HTTP URLs to HTTPS so playback works
+  /// on Web (no mixed content) and iOS App Transport Security.
+  static String normalizeStreamUrl(String url) {
+    const httpArchivePrefix = 'http://archives.bassdrivearchive.com/';
+    if (url.startsWith(httpArchivePrefix)) {
+      return 'https://archives.bassdrivearchive.com/${url.substring(httpArchivePrefix.length)}';
+    }
+    return url;
   }
 
   void _initializePlayer() {
@@ -200,7 +208,9 @@ class AudioPlayerService extends ChangeNotifier {
       await _prepareArtwork();
       if (request != _request) return;
       final source = AudioSource.uri(
-          localPath == null ? Uri.parse(url) : Uri.file(localPath),
+          localPath == null
+              ? Uri.parse(normalizeStreamUrl(url))
+              : Uri.file(localPath),
           tag: MediaItem(
             id: episode?.id ?? 'live_stream',
             title: episode?.displayName ?? 'Bassdrive Live',
@@ -214,7 +224,7 @@ class AudioPlayerService extends ChangeNotifier {
       _changingSource = false;
       unawaited(_play(request));
       _updatePlayerState(_player.processingState, _player.playing);
-      if (episode != null && localPath == null) {
+      if (episode != null && localPath == null && DownloadService.isSupported) {
         unawaited(
             _downloadService.downloadEpisode(episode, type: DownloadType.auto));
       }

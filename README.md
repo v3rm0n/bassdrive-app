@@ -1,16 +1,20 @@
 # Bassdrive Radio App
 
-A cross-platform application for listening to Bassdrive Internet radio (24/7 Drum & Bass) and archived shows. Built with Flutter for iOS, Android, macOS, Windows, and Linux.
+A cross-platform application for listening to Bassdrive Internet radio (24/7 Drum & Bass) and archived shows. Built with Flutter for iOS, Android, macOS, Windows, Linux, and Web.
 
 [![Latest Release](https://img.shields.io/github/v/release/v3rm0n/bassdrive-app?label=latest%20release&style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/releases/latest)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/v3rm0n/bassdrive-app/release.yml?style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/actions)
 
 ## Downloads
 
-[![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/app-release.apk)
-[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-macOS.dmg)
-[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Windows.zip)
-[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Linux.tar.gz)
+[![Web PWA](https://img.shields.io/badge/Web_PWA-15111F?style=for-the-badge&logo=googlechrome&logoColor=white)](https://v3rm0n.github.io/bassdrive-app/)
+[![Android APK](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/app-release.apk)
+[![macOS DMG](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-macOS.dmg)
+[![Windows Installer](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Windows-Setup.exe)
+[![Linux AppImage](https://img.shields.io/badge/Linux_AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Linux.AppImage)
+[![Linux DEB](https://img.shields.io/badge/Linux_DEB-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://github.com/v3rm0n/bassdrive-app/releases/latest/download/Bassdrive-Radio-Linux.deb)
+
+Portable Windows `.zip`, Windows `.msix`, Linux `.tar.gz`, Android Play `.aab`, and checksums are also attached to every [GitHub Release](https://github.com/v3rm0n/bassdrive-app/releases/latest). See [docs/distribution.md](docs/distribution.md) for signing, store publishing, and package manager setup.
 
 <p float="left">
   <img src="/screenshots/IMAGE1.PNG" width="24%" />

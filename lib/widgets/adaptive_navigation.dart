@@ -44,7 +44,9 @@ class AdaptiveNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformUtils.isDesktop) {
+    final useDesktopLayout = PlatformUtils.isDesktop ||
+        (PlatformUtils.isWeb && MediaQuery.sizeOf(context).width >= 768);
+    if (useDesktopLayout) {
       return _DesktopLayout(
         currentIndex: currentIndex,
         onDestinationSelected: onDestinationSelected,
@@ -399,8 +401,11 @@ class _MobileLayout extends StatelessWidget {
               border: Border(top: BorderSide(color: AppColors.outline)),
             ),
             child: NavigationBar(
-              selectedIndex: currentIndex,
-              onDestinationSelected: onDestinationSelected,
+              selectedIndex: destinations
+                  .indexWhere((d) => d.index == currentIndex)
+                  .clamp(0, destinations.length - 1),
+              onDestinationSelected: (pos) =>
+                  onDestinationSelected(destinations[pos].index),
               destinations: destinations
                   .map(
                     (d) => NavigationDestination(

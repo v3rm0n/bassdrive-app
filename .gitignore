@@ -46,3 +46,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Release signing credentials (never commit)
+/android/key.properties
+*.jks
+*.keystore
+*.p12
+*.mobileprovision

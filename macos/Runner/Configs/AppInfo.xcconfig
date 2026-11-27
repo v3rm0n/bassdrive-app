@@ -8,7 +8,7 @@
 PRODUCT_NAME = Bassdrive Radio
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.bassdrive.bassdriveRadio
+PRODUCT_BUNDLE_IDENTIFIER = io.maido.bassdrive
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.bassdrive. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 io.maido. All rights reserved.
