@@ -1,6 +1,6 @@
 # Bassdrive Radio App
 
-A cross-platform application for listening to Bassdrive Internet radio and archived shows. Built with Flutter for iOS, Android, macOS, Windows, and Linux.
+A cross-platform application for listening to Bassdrive Internet radio (24/7 Drum & Bass) and archived shows. Built with Flutter for iOS, Android, macOS, Windows, and Linux.
 
 [![Latest Release](https://img.shields.io/github/v/release/v3rm0n/bassdrive-app?label=latest%20release&style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/releases/latest)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/v3rm0n/bassdrive-app/release.yml?style=for-the-badge)](https://github.com/v3rm0n/bassdrive-app/actions)
@@ -23,17 +23,16 @@ A cross-platform application for listening to Bassdrive Internet radio and archi
 
 ## Features
 
-- **Live Stream**: Listen to Bassdrive's 24/7 Drum & Bass radio stream
-- **Archive Browser**: Browse shows by day of the week (Monday-Sunday)
-- **Show Episodes**: Access hundreds of archived episodes
-- **Listening History**: Automatically tracks which episodes you've listened to
-- **Progress Tracking**: Saves your listening position and resumes where you left off
-- **Favourites/Bookmarks**: Save your favourite episodes for quick access
-- **Filter & Sort**: Search and sort favourites by date, name, or show
-- **Listening Statistics**: Track total listening time for live stream and archives
-- **Offline Downloads**: Episodes auto-download when played, with local download management
-- **Background Playback**: Continue listening while using other apps
-- **Adaptive Navigation**: Mobile bottom navigation and desktop sidebar layout
+- **24/7 Live Broadcast**: Stream Bassdrive's round-the-clock Drum & Bass radio feed with live show metadata and a 174 BPM beat-reactive speaker cone
+- **Weekly Rotation Archive**: Browse archived shows grouped by broadcast day (Monday–Sunday), opening automatically on today's schedule with instant cross-schedule search
+- **Show & Episode Decks**: Explore show archives with a quick **Play latest** action, date-stamped episode rows, air-date metadata, and episode search
+- **Persistent Now-Playing Dock**: Control active live or archive playback from an always-accessible deck while browsing Archive, Favourites, or Downloads
+- **Progress & History Tracking**: Automatically saves your playback position every 5 seconds, resumes where you left off, and marks completed episodes
+- **Favourites Crate**: Bookmark episodes from any list or directly from the full player deck, with instant search and horizontal sort/show filter pills
+- **Offline Storage Vault**: Automatically caches played episodes for offline listening, with manual download support and a 2.0 GB storage capacity meter
+- **Session Telemetry**: Track total listening time and percentage split between the live stream and archived shows
+- **Background Playback**: Continue listening with native lock-screen and media notification controls
+- **Adaptive Cross-Platform Design**: Bundled offline typography (`Big Shoulders` + `Instrument Sans`), mobile bottom navigation, and a desktop studio console layout
 
 ## Getting Started
 
@@ -41,8 +40,7 @@ A cross-platform application for listening to Bassdrive Internet radio and archi
 
 - Flutter SDK (3.10.0 or higher)
 - Dart SDK (3.0.0 or higher)
-- Android Studio / Xcode (for emulators)
-- Android SDK / iOS SDK
+- Android Studio / Xcode (for mobile builds and simulators)
 
 ### Installation
 
@@ -52,7 +50,7 @@ cd bassdrive-app
 flutter pub get
 ```
 
-### Running the app
+### Running the App
 
 ```bash
 # iOS
@@ -66,6 +64,9 @@ flutter run -d macos
 
 # Windows
 flutter run -d windows
+
+# Linux
+flutter run -d linux
 ```
 
 ### Building for Production
@@ -93,23 +94,27 @@ flutter build linux --release
 
 The app is built using:
 
-- **Flutter**: Cross-platform UI framework
-- **just_audio**: Audio playback with background support
+- **Flutter**: Cross-platform UI framework (Material 3 dark theme with custom broadcast theme extensions)
+- **just_audio** & **just_audio_background**: Audio streaming, offline file playback, and media notification controls
 - **audio_service**: Background audio handling
-- **dio**: HTTP client for API requests
-- **shared_preferences**: Local storage for listening progress, favourites, and statistics
-- **Service-oriented + ChangeNotifier**: State management and app services
+- **dio**: HTTP client for archive API requests, live metadata polling, and episode downloads
+- **shared_preferences**: Local persistence for listening progress, favourites, downloads index, and telemetry
+- **google_fonts**: Bundled offline `Big Shoulders` and `Instrument Sans` font families
+- **Service-oriented + ChangeNotifier**: Reactive state management across playback, downloads, and storage
 
 ### Project Structure
 
 ```
 lib/
-├── main.dart                 # App entry point
-├── models/                   # Data models
-├── services/                 # Business logic
-├── screens/                  # UI screens
-├── widgets/                  # Reusable widgets
-└── utils/                    # Utilities
+├── main.dart                 # App entry point and root navigation shell
+├── models/                   # API and local state data models
+├── services/                 # Playback, archive API, download, and storage services
+├── screens/                  # Live, Archive, Show Detail, Favourites, Downloads, and Stats screens
+├── ui/
+│   ├── player/               # Speaker cone, live badge, timeline, and transport primitives
+│   └── theme/                # Design tokens and ThemeExtension definitions
+├── widgets/                  # Adaptive navigation, full player, mini player dock, and list items
+└── utils/                    # Theme configuration and platform detection utilities
 ```
 
 ## Data Source
@@ -122,14 +127,14 @@ The app uses the Bassdrive JSON API:
 ## Platform Support
 
 ### Mobile (iOS & Android)
-- Bottom navigation bar
-- Mini player at bottom
-- Touch-optimized interface
+- Bottom navigation bar with prominent center Player deck button
+- Persistent Now-Playing transport dock across browse tabs
+- Touch-optimized controls and swipe-to-delete download management
 
 ### Desktop (macOS, Windows & Linux)
-- Sidebar navigation (280px width)
-- Content pane with player, archive, favourites, and downloads screens
-- Keyboard/mouse-optimized interface
+- 264px studio console sidebar with live speaker indicator and signal status footer
+- 960px readable rack column with persistent bottom transport dock
+- Mouse and keyboard friendly layout scaling
 
 ## Permissions
 
@@ -161,58 +166,10 @@ This project is open source and available under the MIT License.
 
 ## Acknowledgments
 
-- Bassdrive.com for the amazing drum & bass radio stream
-- The Flutter team for the excellent framework
+- [Bassdrive.com](https://bassdrive.com) for the 24/7 Drum & Bass radio stream
+- The Flutter team for the framework
 - All the DJs and shows featured in the archive
-
-## Changelog
-
-### v0.0.9
-- Added Linux support with automated builds
-- Updated GitHub Actions workflow to build and release Linux tarball
-
-### v0.0.8
-- Fixed Android launch issue by updating NDK version to 28.0.12433566
-
-### v0.0.7
-- Fixed Android release builds
-
-### v0.0.6
-- Update Windows and macOS icons and application name
-
-### v0.0.5
-- Full desktop support for macOS and Windows
-- Adaptive UI with sidebar navigation on desktop
-- Desktop-optimized player bar with full controls
-- GitHub Actions workflow for automated releases on all platforms
-
-### v0.0.4
-- Track listening time statistics
-- Separate tracking for live stream and archives
-- New "Stats" tab in navigation
-
-### v0.0.3
-- Enhanced favourites management with sort and filter
-- Search within favourites
-- Filter by specific show
-
-### v0.0.2
-- Added favourites/bookmarks functionality
-- Heart icon on every episode
-- New "Favourites" tab in navigation
-
-### Bug Fixes & Improvements
-- Fixed broken widget test
-- Fixed slider value clamping bug in full player
-- Fixed error state handling in audio player service
-- Fixed race condition in progress tracking
-- Fixed missing mounted check in navigation
-- Improved storage efficiency
-- Removed unused dependencies
-- Fixed null safety issues
-- Fixed macOS network entitlements for API access
-- Fixed macOS App Transport Security for HTTP streams
 
 ## Support
 
-For issues or feature requests, please open an issue on GitHub.
+For issues, release history, or feature requests, see [GitHub Releases](https://github.com/v3rm0n/bassdrive-app/releases) or open an issue on GitHub.
