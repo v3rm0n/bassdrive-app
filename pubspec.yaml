@@ -71,6 +71,7 @@ dev_dependencies:
 msix_config:
   display_name: Bassdrive Radio
   publisher_display_name: Maido
+  publisher: CN=Maido
   identity_name: io.maido.bassdrive
   msix_version: 0.3.0.9
   logo_path: assets/icon/icon.png
